@@ -1,0 +1,137 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/hotels": {
+      "get": {
+        "operationId": "HotelsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Case-insensitive filter matched against name and location",
+            "schema": {
+              "example": "Barcelona",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HotelDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "hotels"
+        ]
+      }
+    },
+    "/hotels/{id}": {
+      "get": {
+        "operationId": "HotelsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hotel with the given id does not exist"
+          }
+        },
+        "tags": [
+          "hotels"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Hotels API",
+    "description": "Public API contract for the Hotels app",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "GeoDto": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "example": 41.3851,
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "example": 2.1734,
+            "minimum": -180,
+            "maximum": 180
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "HotelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "1"
+          },
+          "name": {
+            "type": "string",
+            "example": "Hotel Barcino Central"
+          },
+          "description": {
+            "type": "string",
+            "example": "A boutique hotel steps away from Las Ramblas, blending Gothic Quarter charm with modern comfort."
+          },
+          "location": {
+            "type": "string",
+            "example": "Barcelona, Spain"
+          },
+          "geo": {
+            "$ref": "#/components/schemas/GeoDto"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "location",
+          "geo"
+        ]
+      }
+    }
+  }
+}
