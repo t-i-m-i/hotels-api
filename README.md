@@ -2,7 +2,7 @@
 
 ## 1. What this is
 
-The backend for the [Hotels app](../hotels) — a small NestJS REST API that
+The backend for the [Hotels app](https://github.com/t-i-m-i/hotels) — a small NestJS REST API that
 serves hotel listing data. It's the server-side half of a demo project
 showing a type-safe API contract shared between a NestJS backend and an
 Expo/React Native client via a generated OpenAPI spec.
