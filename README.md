@@ -11,10 +11,6 @@ This is a demo, not production infrastructure:
 
 - **No authentication.** There's currently no login/session/token system.
   Nothing in the API is gated.
-- **No real database.** `HotelsService` serves a small in-memory mock array
-  (moved here from the Expo app, which used to hold it locally). A
-  `DATABASE_URL` env var exists in `.env.example` purely as a documented
-  seam for wiring up a real database later — nothing reads it yet.
 
 What it does provide, deliberately:
 
@@ -27,6 +23,10 @@ What it does provide, deliberately:
   of the API boundary share real, generated TypeScript types instead of
   hand-kept-in-sync interfaces.
 - **Request validation** via `class-validator` + a global `ValidationPipe`.
+- **A shared Postgres database.** `HotelsService` queries the same Neon
+  Postgres `hotels` table that [`hotels-alt-api`](https://github.com/t-i-m-i/hotels-alt-api)
+  reads from — both APIs serve the same underlying data over different
+  frameworks/contracts. Connect via `DATABASE_URL` in `.env`.
 
 Routes today:
 

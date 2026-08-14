@@ -11,8 +11,6 @@ between this NestJS backend and an Expo/React Native client via a generated Open
 This is a demo, not production infrastructure:
 
 - **No authentication** — nothing is gated.
-- **No real database** — `HotelsService` serves a small in-memory mock array. `DATABASE_URL` exists in
-  `.env.example` as a documented seam for wiring up a real database later; nothing reads it yet.
 
 What it does provide deliberately:
 
@@ -23,6 +21,9 @@ What it does provide deliberately:
   codegen consumes directly, so both sides of the API boundary share generated TypeScript types instead
   of hand-kept-in-sync interfaces.
 - **Request validation** via `class-validator` + a global `ValidationPipe` (`whitelist: true, transform: true`).
+- **A shared Postgres database.** `HotelsService` queries the same Neon Postgres `hotels` table that the
+  sibling [`hotels-alt-api`](https://github.com/t-i-m-i/hotels-alt-api) reads from — same schema, two
+  different frameworks/contracts on top of it. Connect via `DATABASE_URL` in `.env`.
 
 ## Commands
 
@@ -30,7 +31,7 @@ Package manager is **bun** (`bun.lock` is committed — don't introduce npm/yarn
 
 ```bash
 bun install
-cp .env.example .env        # only PORT and a placeholder DATABASE_URL today
+cp .env.example .env        # set DATABASE_URL to the shared Neon Postgres instance
 bun run start:dev           # dev server with watch mode, http://localhost:3000
 ```
 
@@ -57,8 +58,11 @@ Interactive Swagger docs are served at `http://localhost:3000/api` when the dev 
 Standard NestJS module structure — one feature module per resource, each with `*.module.ts`,
 `*.controller.ts`, `*.service.ts`, and a `dto/` folder:
 
-- `src/app.module.ts` — root module; wires up global `ConfigModule` and feature modules (currently just
-  `HotelsModule`).
+- `src/app.module.ts` — root module; wires up global `ConfigModule`, `DatabaseModule`, and feature
+  modules (currently just `HotelsModule`).
+- `src/db/database.module.ts` — `@Global()` module providing a `pg.Pool` under the `PG_POOL` injection
+  token, built from `DATABASE_URL` with `ssl: { rejectUnauthorized: false }` (required by Neon).
+  Injected into `HotelsService` via `@Inject(PG_POOL)`.
 - `src/main.ts` — bootstraps the app for normal serving: enables CORS, registers the global
   `ValidationPipe`, builds the Swagger document via `buildOpenApiDocument()` and mounts it at `/api`.
 - `src/openapi-document.ts` — the single source of truth for the `DocumentBuilder` config (title,
@@ -68,10 +72,11 @@ Standard NestJS module structure — one feature module per resource, each with 
   app, builds the same OpenAPI document, and writes it to `docs/openapi.json`. This file is committed and
   consumed by the Expo app's codegen — treat route/DTO changes as breaking this contract until
   regenerated.
-- `src/hotels/` — the one feature module today. `HotelsService` holds the mock data and lookup/filter
-  logic; `HotelsController` is a thin layer that maps query/path params to service calls and declares
-  response shapes via `@ApiOkResponse`/`@ApiNotFoundResponse`. `NotFoundException` in the service becomes
-  the 404 documented on the controller.
+- `src/hotels/` — the one feature module today. `HotelsService` runs parameterized SQL against the
+  `hotels` table (via the injected `Pool`) and maps rows to `HotelDto`; `HotelsController` is a thin async
+  layer that maps query/path params to service calls and declares response shapes via
+  `@ApiOkResponse`/`@ApiNotFoundResponse`. `NotFoundException` in the service becomes the 404 documented
+  on the controller.
 
 **Contract-first discipline**: because `docs/openapi.json` is consumed by a separate repo, any change to
 a controller route signature or DTO field must be followed by `bun run generate:openapi` in the same

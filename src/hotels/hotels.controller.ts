@@ -11,14 +11,16 @@ export class HotelsController {
 
   @Get()
   @ApiOkResponse({ type: HotelDto, isArray: true })
-  findAll(@Query() query: ListHotelsQueryDto): HotelDto[] {
+  findAll(@Query() query: ListHotelsQueryDto): Promise<HotelDto[]> {
     return this.hotelsService.findAll(query.search);
   }
 
   @Get(':id')
   @ApiOkResponse({ type: HotelDto })
-  @ApiNotFoundResponse({ description: 'Hotel with the given id does not exist' })
-  findOne(@Param('id') id: string): HotelDto {
+  @ApiNotFoundResponse({
+    description: 'Hotel with the given id does not exist',
+  })
+  findOne(@Param('id') id: string): Promise<HotelDto> {
     return this.hotelsService.findOne(id);
   }
 }
