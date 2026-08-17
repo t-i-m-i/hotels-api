@@ -68,6 +68,124 @@
           "hotels"
         ]
       }
+    },
+    "/bookings": {
+      "post": {
+        "operationId": "BookingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "get": {
+        "operationId": "BookingsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/bookings/{id}": {
+      "get": {
+        "operationId": "BookingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "patch": {
+        "operationId": "BookingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "delete": {
+        "operationId": "BookingsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
     }
   },
   "info": {
@@ -131,6 +249,77 @@
           "location",
           "geo"
         ]
+      },
+      "CreateBookingDto": {
+        "type": "object",
+        "properties": {
+          "hotelId": {
+            "type": "string",
+            "example": "38dca5bd-0417-4971-baee-056e1aa3ce21"
+          },
+          "checkIn": {
+            "type": "string",
+            "example": "2026-09-01"
+          },
+          "checkOut": {
+            "type": "string",
+            "example": "2026-09-10"
+          }
+        },
+        "required": [
+          "hotelId",
+          "checkIn",
+          "checkOut"
+        ]
+      },
+      "BookingDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "38dca5bd-0417-4971-baee-056e1aa3ce21"
+          },
+          "userId": {
+            "type": "string",
+            "example": "bf721a73-1a8b-4de2-b74b-a747e1197d3f"
+          },
+          "hotelId": {
+            "type": "string",
+            "example": "38dca5bd-0417-4971-baee-056e1aa3ce21"
+          },
+          "checkIn": {
+            "type": "string",
+            "example": "2026-09-01"
+          },
+          "checkOut": {
+            "type": "string",
+            "example": "2026-09-10"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "hotelId",
+          "checkIn",
+          "checkOut"
+        ]
+      },
+      "UpdateBookingDto": {
+        "type": "object",
+        "properties": {
+          "hotelId": {
+            "type": "string",
+            "example": "38dca5bd-0417-4971-baee-056e1aa3ce21"
+          },
+          "checkIn": {
+            "type": "string",
+            "example": "2026-09-01"
+          },
+          "checkOut": {
+            "type": "string",
+            "example": "2026-09-10"
+          }
+        }
       }
     }
   }
