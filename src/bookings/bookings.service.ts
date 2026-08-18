@@ -70,9 +70,6 @@ export class BookingsService {
     return result.rows.map(toBookingDetailsDto);
   }
 
-  // DEV scratch
-  // findCurrent(hotelId?: string) [hotelId ?? null] - if id return for hotel, if empty return for all - make it sense?
-  // for now we need just current for hotel to disable ranges
   async findCurrentByHotel(hotelId: string): Promise<BookingDto[]> {
     const result = await this.pool.query<BookingRow>(
       /*sql*/ `SELECT id, user_id, hotel_id, check_in, check_out FROM reservations
