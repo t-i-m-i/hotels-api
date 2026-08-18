@@ -16,3 +16,20 @@ export class BookingDto {
   @ApiProperty({ example: '2026-09-10' })
   checkOut!: string;
 }
+
+export class BookingHotelSummaryDto {
+  @ApiProperty() name!: string;
+}
+
+export class BookingUserSummaryDto {
+  @ApiProperty() firstName!: string;
+  @ApiProperty() lastName!: string;
+}
+
+export class BookingDetailsDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ type: BookingHotelSummaryDto }) hotel!: BookingHotelSummaryDto;
+  @ApiProperty({ type: BookingUserSummaryDto }) user!: BookingUserSummaryDto;
+  @ApiProperty() checkIn!: string;
+  @ApiProperty() checkOut!: string;
+}

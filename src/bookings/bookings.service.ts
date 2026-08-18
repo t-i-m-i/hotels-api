@@ -3,7 +3,7 @@ import { Pool } from 'pg';
 import { PG_POOL } from '../db/database.module';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { BookingDto } from './dto/booking.dto';
+import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 
 type BookingRow = {
   id: string;
@@ -18,6 +18,25 @@ function toBookingDto(row: BookingRow): BookingDto {
     id: row.id,
     userId: row.user_id,
     hotelId: row.hotel_id,
+    checkIn: row.check_in.toISOString().slice(0, 10),
+    checkOut: row.check_out.toISOString().slice(0, 10),
+  };
+}
+
+type BookingDetailsRow = {
+  id: string;
+  check_in: Date;
+  check_out: Date;
+  hotel_name: string;
+  first_name: string;
+  last_name: string;
+};
+
+function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
+  return {
+    id: row.id,
+    hotel: { name: row.hotel_name },
+    user: { firstName: row.first_name, lastName: row.last_name },
     checkIn: row.check_in.toISOString().slice(0, 10),
     checkOut: row.check_out.toISOString().slice(0, 10),
   };
@@ -41,8 +60,14 @@ export class BookingsService {
     return toBookingDto(result.rows[0]);
   }
 
-  findAll() {
-    return `This action returns all bookings`;
+  async findAll(): Promise<BookingDetailsDto[]> {
+    const result = await this.pool
+      .query<BookingDetailsRow>(/*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
+        FROM reservations b
+        LEFT JOIN hotels h ON h.id = b.hotel_id
+        LEFT JOIN users u ON u.id = b.user_id
+      `);
+    return result.rows.map(toBookingDetailsDto);
   }
 
   async findOne(id: string): Promise<BookingDto> {

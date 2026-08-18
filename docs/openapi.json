@@ -104,7 +104,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingDetailsDto"
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -127,7 +137,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found"
           }
         },
         "tags": [
@@ -300,6 +320,59 @@
           "id",
           "userId",
           "hotelId",
+          "checkIn",
+          "checkOut"
+        ]
+      },
+      "BookingHotelSummaryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "BookingUserSummaryDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName"
+        ]
+      },
+      "BookingDetailsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hotel": {
+            "$ref": "#/components/schemas/BookingHotelSummaryDto"
+          },
+          "user": {
+            "$ref": "#/components/schemas/BookingUserSummaryDto"
+          },
+          "checkIn": {
+            "type": "string"
+          },
+          "checkOut": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "hotel",
+          "user",
           "checkIn",
           "checkOut"
         ]

@@ -10,8 +10,13 @@ import {
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { ApiTags, ApiCreatedResponse, ApiOkResponse, ApiNotFoundResponse } from '@nestjs/swagger';
-import { BookingDto } from './dto/booking.dto';
+import {
+  ApiTags,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
+import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 
 @ApiTags('bookings')
 @Controller('bookings')
@@ -25,7 +30,8 @@ export class BookingsController {
   }
 
   @Get()
-  findAll() {
+  @ApiOkResponse({ type: BookingDetailsDto, isArray: true })
+  findAll(): Promise<BookingDetailsDto[]> {
     return this.bookingsService.findAll();
   }
 
