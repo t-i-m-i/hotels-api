@@ -1,11 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../db/database.module';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { BookingDto } from './dto/booking.dto';
 
-type ReservationRow = {
+type BookingRow = {
   id: string;
   user_id: string;
   hotel_id: string;
@@ -13,7 +13,7 @@ type ReservationRow = {
   check_out: Date;
 };
 
-function toBookingDto(row: ReservationRow): BookingDto {
+function toBookingDto(row: BookingRow): BookingDto {
   return {
     id: row.id,
     userId: row.user_id,
@@ -37,7 +37,7 @@ export class BookingsService {
       RETURNING *;
     `;
     const values = [userId, hotelId, checkIn, checkOut];
-    const result = await this.pool.query<ReservationRow>(query, values);
+    const result = await this.pool.query<BookingRow>(query, values);
     return toBookingDto(result.rows[0]);
   }
 
@@ -45,8 +45,16 @@ export class BookingsService {
     return `This action returns all bookings`;
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} booking`;
+  async findOne(id: string): Promise<BookingDto> {
+    const result = await this.pool.query<BookingRow>(
+      `SELECT * FROM reservations WHERE id = $1`,
+      [id],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      throw new NotFoundException(`Booking with id ${id} not found`);
+    }
+    return toBookingDto(row);
   }
 
   update(id: string, updateBookingDto: UpdateBookingDto) {

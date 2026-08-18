@@ -10,7 +10,7 @@ import {
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { ApiTags, ApiCreatedResponse } from '@nestjs/swagger';
+import { ApiTags, ApiCreatedResponse, ApiOkResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { BookingDto } from './dto/booking.dto';
 
 @ApiTags('bookings')
@@ -30,7 +30,9 @@ export class BookingsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  @ApiOkResponse({ type: BookingDto })
+  @ApiNotFoundResponse({ description: 'Booking not found' })
+  findOne(@Param('id') id: string): Promise<BookingDto> {
     return this.bookingsService.findOne(id);
   }
 
