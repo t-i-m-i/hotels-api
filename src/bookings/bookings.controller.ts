@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -33,6 +34,14 @@ export class BookingsController {
   @ApiOkResponse({ type: BookingDetailsDto, isArray: true })
   findAll(): Promise<BookingDetailsDto[]> {
     return this.bookingsService.findAll();
+  }
+
+  @Get('hotel/:hotelId')
+  @ApiOkResponse({ type: BookingDto, isArray: true })
+  findCurrentByHotel(
+    @Param('hotelId', ParseUUIDPipe) hotelId: string,
+  ): Promise<BookingDto[]> {
+    return this.bookingsService.findCurrentByHotel(hotelId);
   }
 
   @Get(':id')
