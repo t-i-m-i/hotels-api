@@ -1,4 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../db/database.module';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -46,11 +52,40 @@ function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
 export class BookingsService {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
+  private async assertNoOverlap(
+    hotelId: string,
+    checkIn: string,
+    checkOut: string,
+    excludeBookingId?: string,
+  ) {
+    if (checkIn >= checkOut) {
+      throw new BadRequestException('checkOut must be after checkIn');
+    }
+
+    const overlap = await this.pool.query(
+      /*sql*/ `SELECT 1 FROM reservations
+      WHERE hotel_id = $1 AND check_in < $3 AND check_out > $2
+      AND ($4::text IS NULL OR id != $4)
+      LIMIT 1`,
+      [hotelId, checkIn, checkOut, excludeBookingId ?? null],
+    );
+    if (overlap.rows.length > 0) {
+      throw new ConflictException(
+        'hotel is already booked for the given date range',
+      );
+    }
+  }
+
   async create(createBookingDto: CreateBookingDto) {
     // TODO(auth): replace with the authenticated user's id once BetterAuth is wired in — see guard/@CurrentUser() plan
     const userId = 'bf721a73-1a8b-4de2-b74b-a747e1197d3f';
     const { hotelId, checkIn, checkOut } = createBookingDto;
-    const query = `
+
+    // additional validation beyond dto
+    await this.assertNoOverlap(hotelId, checkIn, checkOut);
+
+    // create booking
+    const query = /*sql*/ `
       INSERT INTO reservations (user_id, hotel_id, check_in, check_out)
       VALUES ($1, $2, $3, $4)
       RETURNING *;
@@ -92,6 +127,7 @@ export class BookingsService {
     return toBookingDto(row);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(id: string, updateBookingDto: UpdateBookingDto) {
     return `This action updates a #${id} booking`;
   }
