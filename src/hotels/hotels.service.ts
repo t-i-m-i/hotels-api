@@ -28,7 +28,7 @@ export class HotelsService {
 
   async findAll(search?: string): Promise<HotelDto[]> {
     const result = await this.pool.query<HotelRow>(
-      `SELECT id, name, description, location, latitude, longitude
+      /*sql*/ `SELECT id, name, description, location, latitude, longitude
        FROM hotels
        WHERE ($1::text IS NULL OR name ILIKE '%' || $1 || '%' OR location ILIKE '%' || $1 || '%')
        ORDER BY name`,
@@ -40,7 +40,7 @@ export class HotelsService {
 
   async findOne(id: string): Promise<HotelDto> {
     const result = await this.pool.query<HotelRow>(
-      `SELECT id, name, description, location, latitude, longitude
+      /*sql*/ `SELECT id, name, description, location, latitude, longitude
        FROM hotels
        WHERE id = $1`,
       [id],
