@@ -63,7 +63,7 @@ export class BookingsService {
     }
 
     const overlap = await this.pool.query(
-      /*sql*/ `SELECT 1 FROM reservations
+      /*sql*/ `SELECT 1 FROM bookings
       WHERE hotel_id = $1 AND check_in < $3 AND check_out > $2
       AND ($4::text IS NULL OR id != $4)
       LIMIT 1`,
@@ -86,7 +86,7 @@ export class BookingsService {
 
     // create booking
     const query = /*sql*/ `
-      INSERT INTO reservations (user_id, hotel_id, check_in, check_out)
+      INSERT INTO bookings (user_id, hotel_id, check_in, check_out)
       VALUES ($1, $2, $3, $4)
       RETURNING *;
     `;
@@ -98,7 +98,7 @@ export class BookingsService {
   async findAll(): Promise<BookingDetailsDto[]> {
     const result = await this.pool
       .query<BookingDetailsRow>(/*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
-        FROM reservations b
+        FROM bookings b
         LEFT JOIN hotels h ON h.id = b.hotel_id
         LEFT JOIN users u ON u.id = b.user_id
       `);
@@ -107,7 +107,7 @@ export class BookingsService {
 
   async findCurrentByHotel(hotelId: string): Promise<BookingDto[]> {
     const result = await this.pool.query<BookingRow>(
-      /*sql*/ `SELECT id, user_id, hotel_id, check_in, check_out FROM reservations
+      /*sql*/ `SELECT id, user_id, hotel_id, check_in, check_out FROM bookings
        WHERE hotel_id = $1 AND check_out >= CURRENT_DATE
        ORDER BY check_in`,
       [hotelId],
@@ -117,7 +117,7 @@ export class BookingsService {
 
   async findOne(id: string): Promise<BookingDto> {
     const result = await this.pool.query<BookingRow>(
-      `SELECT * FROM reservations WHERE id = $1`,
+      `SELECT * FROM bookings WHERE id = $1`,
       [id],
     );
     const row = result.rows[0];
