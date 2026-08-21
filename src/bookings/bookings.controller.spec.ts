@@ -9,7 +9,10 @@ describe('BookingsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BookingsController],
-      providers: [BookingsService, { provide: PG_POOL, useValue: { query: jest.fn() } }],
+      providers: [
+        BookingsService,
+        { provide: PG_POOL, useValue: { query: jest.fn() } },
+      ],
     }).compile();
 
     controller = module.get<BookingsController>(BookingsController);

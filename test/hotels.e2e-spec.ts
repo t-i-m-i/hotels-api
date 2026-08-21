@@ -18,7 +18,9 @@ describe('Hotels (e2e)', () => {
     // main.ts's bootstrap() is never called in tests, so anything it sets
     // up on the app (global pipes, CORS, ...) has to be repeated here to
     // match what actually runs in dev/prod.
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
   });
 
