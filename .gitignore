@@ -2,6 +2,9 @@
 /dist
 /node_modules
 
+# clinic.js profiling reports
+/.clinic
+
 # logs
 *.log
 npm-debug.log*
