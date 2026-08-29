@@ -98,3 +98,8 @@ be running locally (`bun run start:dev`) in its own terminal while working on th
   incrementing). Logs are never edited after the fact — corrections go in a newer log entry or a
   top-level reference doc instead.
 - `docs/openapi.json` is generated output, not a reference doc.
+
+## Commit messages
+
+One-line commit messages — no multi-paragraph bodies. Put any detail that doesn't fit in a single line
+into a `docs/logs/NNN-*.md` entry instead.
