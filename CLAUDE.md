@@ -101,5 +101,4 @@ be running locally (`bun run start:dev`) in its own terminal while working on th
 
 ## Commit messages
 
-One-line commit messages — no multi-paragraph bodies. Put any detail that doesn't fit in a single line
-into a `docs/logs/NNN-*.md` entry instead.
+One-line commit messages — no multi-paragraph bodies.
