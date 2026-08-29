@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsUUID, MinDate } from 'class-validator';
+import { IsDateString, IsUUID } from 'class-validator';
 
 export class CreateBookingDto {
   @ApiProperty({ example: '38dca5bd-0417-4971-baee-056e1aa3ce21' })
@@ -8,7 +8,6 @@ export class CreateBookingDto {
 
   @ApiProperty({ example: '2026-09-01' })
   @IsDateString()
-  @MinDate(() => new Date())
   checkIn!: string;
 
   @ApiProperty({ example: '2026-09-10' })

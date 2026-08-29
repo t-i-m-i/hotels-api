@@ -19,13 +19,24 @@ type BookingRow = {
   check_out: Date;
 };
 
+// node-pg parses a `date` column into a Date at local midnight for that
+// calendar day, not UTC midnight — reading it back with getFullYear/Month/Date
+// (not toISOString, which converts to UTC and can roll back a day depending
+// on the server's timezone offset) is what recovers the original date.
+function formatDateOnly(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function toBookingDto(row: BookingRow): BookingDto {
   return {
     id: row.id,
     userId: row.user_id,
     hotelId: row.hotel_id,
-    checkIn: row.check_in.toISOString().slice(0, 10),
-    checkOut: row.check_out.toISOString().slice(0, 10),
+    checkIn: formatDateOnly(row.check_in),
+    checkOut: formatDateOnly(row.check_out),
   };
 }
 
@@ -43,14 +54,21 @@ function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
     id: row.id,
     hotel: { name: row.hotel_name },
     user: { firstName: row.first_name, lastName: row.last_name },
-    checkIn: row.check_in.toISOString().slice(0, 10),
-    checkOut: row.check_out.toISOString().slice(0, 10),
+    checkIn: formatDateOnly(row.check_in),
+    checkOut: formatDateOnly(row.check_out),
   };
 }
 
 @Injectable()
 export class BookingsService {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+
+  private assertCheckInNotInPast(checkIn: string) {
+    const today = formatDateOnly(new Date());
+    if (checkIn < today) {
+      throw new BadRequestException('checkIn must not be in the past');
+    }
+  }
 
   private async assertNoOverlap(
     hotelId: string,
@@ -65,7 +83,7 @@ export class BookingsService {
     const overlap = await this.pool.query(
       /*sql*/ `SELECT 1 FROM bookings
       WHERE hotel_id = $1 AND check_in < $3 AND check_out > $2
-      AND ($4::text IS NULL OR id != $4)
+      AND ($4::uuid IS NULL OR id != $4::uuid)
       LIMIT 1`,
       [hotelId, checkIn, checkOut, excludeBookingId ?? null],
     );
@@ -82,6 +100,7 @@ export class BookingsService {
     const { hotelId, checkIn, checkOut } = createBookingDto;
 
     // additional validation beyond dto
+    this.assertCheckInNotInPast(checkIn);
     await this.assertNoOverlap(hotelId, checkIn, checkOut);
 
     // create booking
