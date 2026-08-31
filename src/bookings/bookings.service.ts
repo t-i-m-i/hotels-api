@@ -118,8 +118,8 @@ export class BookingsService {
     const result = await this.pool
       .query<BookingDetailsRow>(/*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
         FROM bookings b
-        LEFT JOIN hotels h ON h.id = b.hotel_id
-        LEFT JOIN users u ON u.id = b.user_id
+        INNER JOIN hotels h ON h.id = b.hotel_id
+        INNER JOIN users u ON u.id = b.user_id
       `);
     return result.rows.map(toBookingDetailsDto);
   }
@@ -138,8 +138,8 @@ export class BookingsService {
     const result = await this.pool.query<BookingDetailsRow>(
       /*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
       FROM bookings b
-       LEFT JOIN hotels h on h.id = b.hotel_id
-       LEFT JOIN users u on u.id = b.user_id
+       INNER JOIN hotels h on h.id = b.hotel_id
+       INNER JOIN users u on u.id = b.user_id
        WHERE b.user_id = $1
        ORDER BY b.check_in`,
       [userId],
