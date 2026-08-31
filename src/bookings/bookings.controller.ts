@@ -44,6 +44,14 @@ export class BookingsController {
     return this.bookingsService.findCurrentByHotel(hotelId);
   }
 
+  @Get('user/:userId')
+  @ApiOkResponse({ type: BookingDetailsDto, isArray: true })
+  getBookingsByUser(
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ): Promise<BookingDetailsDto[]> {
+    return this.bookingsService.getBookingsByUser(userId);
+  }
+
   @Get(':id')
   @ApiOkResponse({ type: BookingDto })
   @ApiNotFoundResponse({ description: 'Booking not found' })

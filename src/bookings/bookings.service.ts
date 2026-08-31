@@ -134,6 +134,19 @@ export class BookingsService {
     return result.rows.map(toBookingDto);
   }
 
+  async getBookingsByUser(userId: string): Promise<BookingDetailsDto[]> {
+    const result = await this.pool.query<BookingDetailsRow>(
+      /*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
+      FROM bookings b
+       LEFT JOIN hotels h on h.id = b.hotel_id
+       LEFT JOIN users u on u.id = b.user_id
+       WHERE b.user_id = $1
+       ORDER BY b.check_in`,
+      [userId],
+    );
+    return result.rows.map(toBookingDetailsDto);
+  }
+
   async findOne(id: string): Promise<BookingDto> {
     const result = await this.pool.query<BookingRow>(
       `SELECT * FROM bookings WHERE id = $1`,

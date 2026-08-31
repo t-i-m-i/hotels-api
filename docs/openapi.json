@@ -155,6 +155,39 @@
         ]
       }
     },
+    "/bookings/user/{userId}": {
+      "get": {
+        "operationId": "BookingsController_getBookingsByUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingDetailsDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
     "/bookings/{id}": {
       "get": {
         "operationId": "BookingsController_findOne",
