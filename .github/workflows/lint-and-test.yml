@@ -1,7 +1,16 @@
 name: Lint and Test
 
 on:
+  # manual
   workflow_dispatch:
+
+  # Run when commits land on main (direct push OR merged PR)
+  # push:
+  #   branches: [main]
+
+  # Run on every PR targeting main, on each new commit to that PR
+  # pull_request:
+  #   branches: [main]
 
 jobs:
   lint-and-test:
