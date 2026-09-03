@@ -48,7 +48,7 @@ What it does provide, deliberately:
 
 ## 3. Running it locally
 
-Requires [bun](https://bun.sh) and a local Redis for the job queues.
+Requires [bun](https://bun.sh) and a local Redis (`docker compose up -d redis`) for the job queues.
 
 ```bash
 bun install
