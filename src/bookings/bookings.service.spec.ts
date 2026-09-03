@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { getQueueToken } from '@nestjs/bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookingsService } from './bookings.service';
 import { PG_POOL } from '../db/database.module';
+import { EMAIL_QUEUE } from './bookings.constants';
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -13,7 +16,12 @@ describe('BookingsService', () => {
     pool = { query: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BookingsService, { provide: PG_POOL, useValue: pool }],
+      providers: [
+        BookingsService,
+        { provide: PG_POOL, useValue: pool },
+        { provide: getQueueToken(EMAIL_QUEUE), useValue: { add: jest.fn() } },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+      ],
     }).compile();
 
     service = module.get<BookingsService>(BookingsService);

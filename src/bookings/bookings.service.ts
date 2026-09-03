@@ -5,8 +5,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import type { Queue } from 'bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Pool } from 'pg';
 import { PG_POOL } from '../db/database.module';
+import { EMAIL_QUEUE } from './bookings.constants';
+import { BookingCreatedEvent } from './events/booking-created.event';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
@@ -61,7 +66,11 @@ function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
 
 @Injectable()
 export class BookingsService {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    @InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   private assertCheckInNotInPast(checkIn: string) {
     const today = formatDateOnly(new Date());
@@ -111,7 +120,38 @@ export class BookingsService {
     `;
     const values = [userId, hotelId, checkIn, checkOut];
     const result = await this.pool.query<BookingRow>(query, values);
-    return toBookingDto(result.rows[0]);
+    const booking = toBookingDto(result.rows[0]);
+
+    const event = new BookingCreatedEvent(
+      booking.id,
+      booking.userId,
+      booking.hotelId,
+      booking.checkIn,
+      booking.checkOut,
+    );
+
+    // Fire-and-forget: don't block the response on analytics, email, or
+    // invoice generation. emit() dispatches to @OnEvent handlers
+    // synchronously but doesn't await their internal async work.
+    this.eventEmitter.emit('booking.created', event);
+    this.emailQueue
+      .add('send-confirmation-email', event)
+      .catch((err: unknown) =>
+        console.error(
+          `Failed to enqueue send-confirmation-email for booking ${booking.id}`,
+          err,
+        ),
+      );
+    this.emailQueue
+      .add('generate-invoice', event)
+      .catch((err: unknown) =>
+        console.error(
+          `Failed to enqueue generate-invoice for booking ${booking.id}`,
+          err,
+        ),
+      );
+
+    return booking;
   }
 
   async findAll(): Promise<BookingDetailsDto[]> {
