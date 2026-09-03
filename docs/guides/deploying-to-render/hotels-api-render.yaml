@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: hotels-api
+    runtime: node
+    region: frankfurt # pick one region, use it for every service
+    plan: free
+    branch: main
+    buildCommand: bun install && bun run build
+    preDeployCommand: bun run migrate:up # apply pending SQL migrations before each deploy
+    startCommand: node dist/main
+    healthCheckPath: /api # Swagger UI returns 200; cheap liveness signal
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: BUN_VERSION
+        value: '1.1.38'
+      - key: DATABASE_URL
+        sync: false # paste the Neon connection string in the dashboard (If you use Render Postgres instead of Neon, add a `databases:` block and reference it with `fromDatabase`.)
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: hotels-redis
+          property: connectionString
+
+  - type: keyvalue
+    name: hotels-redis
+    plan: free
+    region: frankfurt
+    maxmemoryPolicy: noeviction # Bull requires this; LRU eviction corrupts queue state
+    ipAllowList: [] # internal-only, no public endpoint

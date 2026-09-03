@@ -213,3 +213,22 @@ either way.
    above has necessarily finished.
 7. Independently, `EmailQueueProcessor` (a Bull worker running in the same
    process) picks up both jobs off Redis and runs them.
+
+## ioredis
+
+**ioredis is a Redis *client* library for Node.js.** It's a transitive dependency: `@nestjs/bull` → `bull` → `ioredis` (`node_modules/ioredis`, v5.11.1 here). It's plain JavaScript running in Nest process. It is not Redis, and it's not a separate process — it's just the code that knows how to open a TCP socket to a Redis server (`localhost:6379`) and speak the Redis wire protocol.
+
+The layering when you call `this.emailQueue.add('send-confirmation-email', event)`:
+
+```
+BookingsService
+  → Bull Queue      (translates "add a job" into concrete Redis commands:
+                     LPUSH, HSET, EVALSHA of a Lua script, etc.)
+    → ioredis       (a Redis client object living in your Nest heap;
+                     holds the socket + an in-memory offlineQueue array)
+      → TCP socket  → Redis server  ← this is the only part that's missing
+```
+
+**The "offline queue" is an array field on the ioredis client instance** — purely in Nest process's memory. ioredis's default behavior: if you issue a command while the socket isn't connected (still retrying, or never connected), instead of throwing it pushes the command + its pending promise onto `client.offlineQueue`. If the connection later comes up, it drains that array onto the socket and the promises resolve. If Redis never comes up, those entries just sit in the array (growing the heap), and the `.add()` promises stay pending — which is why the booking request still returns 201 and you never even hit the `.catch()`.
+
+So without Docker/Redis: nothing crashes, ioredis just sits in a reconnect loop logging `ECONNREFUSED`, and the job data never leaves your Node process.

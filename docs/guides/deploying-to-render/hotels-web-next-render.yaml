@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: hotels-web
+    runtime: node
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: bun install && bun run build
+    startCommand: bun run start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: BUN_VERSION
+        value: '1.1.38'
+      - key: NEXT_PUBLIC_API_URL
+        value: https://hotels-api.onrender.com # set to the api service's real URL after first deploy
