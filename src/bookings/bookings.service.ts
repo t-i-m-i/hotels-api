@@ -204,7 +204,12 @@ export class BookingsService {
     return `This action updates a #${id} booking`;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} booking`;
+  async remove(id: string): Promise<void> {
+    const result = await this.pool.query('DELETE FROM bookings WHERE id = $1', [
+      id,
+    ]);
+    if (result.rowCount === 0) {
+      throw new NotFoundException(`Booking with id ${id} not found`);
+    }
   }
 }

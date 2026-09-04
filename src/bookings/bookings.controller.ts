@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
@@ -15,6 +16,7 @@ import {
   ApiTags,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
@@ -65,7 +67,10 @@ export class BookingsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse({ description: 'Booking not found' })
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.bookingsService.remove(id);
   }
 }

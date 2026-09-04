@@ -264,8 +264,11 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
             "description": ""
+          },
+          "404": {
+            "description": "Booking not found"
           }
         },
         "tags": [

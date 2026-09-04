@@ -51,4 +51,17 @@ describe('Hotels (e2e)', () => {
       .get('/hotels/00000000-0000-0000-0000-000000000000')
       .expect(404);
   });
+
+  it('GET /hotels rejects a non-string search query via the global ValidationPipe', async () => {
+    // Repeating the query key (?search=a&search=b) makes Express parse
+    // `search` as an array, which fails ListHotelsQueryDto's @IsString().
+    const response = await request(app.getHttpServer())
+      .get('/hotels')
+      .query({ search: ['Barcelona', 'Madrid'] })
+      .expect(400);
+
+    expect(response.body.message).toEqual(
+      expect.arrayContaining([expect.stringContaining('search')]),
+    );
+  });
 });
