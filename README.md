@@ -45,6 +45,7 @@ What it does provide, deliberately:
 | `GET` | `/bookings/:id` | Fetch a single booking, `404` if the id doesn't exist. |
 | `PATCH` | `/bookings/:id` | Update a booking. |
 | `DELETE` | `/bookings/:id` | Delete a booking. |
+| `DELETE` | `/bookings/synthetic` | Bulk-delete bookings created with `X-Synthetic-Booking: true` — see [Testing](#5-testing). |
 
 ## 3. Running it locally
 
@@ -83,3 +84,30 @@ leave it running while you work on the Expo side.
 
 See `docs/logs/` for the running history of how this was built and why,
 and `docs/README.md` for the log convention.
+
+## 5. Testing
+
+| Command | What it does |
+|---|---|
+| `bun run test` | Unit tests (Jest, `rootDir: src`). |
+| `bun run test:watch` | Unit tests in watch mode. |
+| `bun run test:cov` | Unit tests with coverage. |
+| `bun run test:e2e` | E2E tests (`test/*.e2e-spec.ts`) — boots the real `AppModule` against whatever `DATABASE_URL` points to. No mocks. |
+
+`bun run test:e2e` needs a reachable database with the demo seed data
+(same `DATABASE_URL` as `bun run start:dev`) and Redis up, since booting
+`AppModule` wires up the Bull queues too.
+
+### Synthetic bookings, for the sibling apps' e2e suites
+
+`hotels-web-next`'s Playwright suite and the `hotels` RN app's Maestro
+flow both create a real booking against this same database as part of
+their happy-path e2e tests. Rather than have them find-and-delete that
+booking by guessing at hotel name/dates, `POST /bookings` accepts an
+optional `X-Synthetic-Booking: true` header, persisted as
+`bookings.is_synthetic`, and `DELETE /bookings/synthetic` removes every
+row tagged that way in one call. See
+`docs/guides/testing-against-production-patterns.md` for how this
+compares to how production systems (Stripe test mode, disposable
+per-run environments, etc.) handle the same problem, and
+`docs/logs/007-synthetic-booking-tag.md` for how this was added.
