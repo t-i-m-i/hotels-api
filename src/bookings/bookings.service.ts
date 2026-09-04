@@ -103,7 +103,7 @@ export class BookingsService {
     }
   }
 
-  async create(createBookingDto: CreateBookingDto) {
+  async create(createBookingDto: CreateBookingDto, isSynthetic = false) {
     // TODO(auth): replace with the authenticated user's id once BetterAuth is wired in — see guard/@CurrentUser() plan
     const userId = 'bf721a73-1a8b-4de2-b74b-a747e1197d3f';
     const { hotelId, checkIn, checkOut } = createBookingDto;
@@ -114,11 +114,11 @@ export class BookingsService {
 
     // create booking
     const query = /*sql*/ `
-      INSERT INTO bookings (user_id, hotel_id, check_in, check_out)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO bookings (user_id, hotel_id, check_in, check_out, is_synthetic)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const values = [userId, hotelId, checkIn, checkOut];
+    const values = [userId, hotelId, checkIn, checkOut, isSynthetic];
     const result = await this.pool.query<BookingRow>(query, values);
     const booking = toBookingDto(result.rows[0]);
 
@@ -211,5 +211,12 @@ export class BookingsService {
     if (result.rowCount === 0) {
       throw new NotFoundException(`Booking with id ${id} not found`);
     }
+  }
+
+  async removeSynthetic(): Promise<{ deletedCount: number }> {
+    const result = await this.pool.query(
+      'DELETE FROM bookings WHERE is_synthetic = true',
+    );
+    return { deletedCount: result.rowCount ?? 0 };
   }
 }

@@ -72,7 +72,17 @@
     "/bookings": {
       "post": {
         "operationId": "BookingsController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-synthetic-booking",
+            "required": false,
+            "in": "header",
+            "description": "Set to \"true\" to tag this booking as test data created by an automated e2e suite, rather than a real reservation. Synthetic bookings are excluded from nothing at read time — they behave like any other booking — but can be bulk-deleted via DELETE /bookings/synthetic.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -275,6 +285,27 @@
           "bookings"
         ]
       }
+    },
+    "/bookings/synthetic": {
+      "delete": {
+        "operationId": "BookingsController_removeSynthetic",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteSyntheticBookingsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
     }
   },
   "info": {
@@ -462,6 +493,19 @@
             "example": "2026-09-10"
           }
         }
+      },
+      "DeleteSyntheticBookingsDto": {
+        "type": "object",
+        "properties": {
+          "deletedCount": {
+            "type": "number",
+            "example": 3,
+            "description": "Number of synthetic bookings deleted"
+          }
+        },
+        "required": [
+          "deletedCount"
+        ]
       }
     }
   }
