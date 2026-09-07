@@ -27,41 +27,36 @@ function toHotelDto(row: HotelRow): HotelDto {
 export class HotelsService {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
-  async findAll(search?: string): Promise<HotelDto[]> {
-    const result = await this.pool.query<HotelRow>(
-      /*sql*/ `SELECT id, name, description, location, latitude, longitude
+  async findAll(
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+  ): Promise<PaginatedHotelsDto> {
+    const offset = (page - 1) * pageSize;
+
+    const pageSql = /*sql*/ `SELECT id, name, description, location, latitude, longitude
        FROM hotels
        WHERE ($1::text IS NULL OR name ILIKE '%' || $1 || '%' OR location ILIKE '%' || $1 || '%')
-       ORDER BY name`,
-      [search ?? null],
-    );
-
-    return result.rows.map(toHotelDto);
-  }
-
-  async findAllPaginated(page: number = 1): Promise<PaginatedHotelsDto> {
-    const LIMIT = 20;
-    const offset = (page - 1) * LIMIT;
-
-    const result = await this.pool.query<HotelRow>(
-      /*sql*/ `SELECT id, name, description, location, latitude, longitude
-       FROM hotels
        ORDER BY name
-       LIMIT $1 OFFSET $2`,
-      [LIMIT, offset],
-    );
+       LIMIT $2 OFFSET $3`;
 
-    const countRows = await this.pool.query<{ total: number }>(
-      /*sql*/ `SELECT COUNT(*)::int AS total FROM hotels`,
-    );
-    const total = countRows.rows[0]?.total ?? 0;
-    const pageCount = Math.ceil(total / LIMIT);
+    const countSql = /*sql*/ `SELECT COUNT(*)::int AS total
+      FROM hotels
+      WHERE ($1::text IS NULL OR name ILIKE '%' || $1 || '%' OR location ILIKE '%' || $1 || '%')`;
+
+    const [result, countResult] = await Promise.all([
+      this.pool.query<HotelRow>(pageSql, [search ?? null, pageSize, offset]),
+      this.pool.query<{ total: number }>(countSql, [search ?? null]),
+    ]);
+
+    const total = countResult.rows[0]?.total ?? 0;
+    const pageCount = Math.ceil(total / pageSize);
 
     const data = result.rows.map(toHotelDto);
     const meta = {
       pagination: {
         page,
-        pageSize: LIMIT,
+        pageSize,
         pageCount,
         total,
       },

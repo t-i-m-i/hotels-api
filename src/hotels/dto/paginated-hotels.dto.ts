@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { HotelDto } from './hotel.dto';
 
-export class PaginationMetaDto {
+export class PaginationDto {
   @ApiProperty({ example: 1 })
   page: number;
 
@@ -16,8 +16,8 @@ export class PaginationMetaDto {
 }
 
 export class HotelsMetaDto {
-  @ApiProperty({ type: PaginationMetaDto })
-  pagination: PaginationMetaDto;
+  @ApiProperty({ type: PaginationDto })
+  pagination: PaginationDto;
 }
 
 export class PaginatedHotelsDto {
