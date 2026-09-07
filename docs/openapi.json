@@ -36,6 +36,40 @@
         ]
       }
     },
+    "/hotels/paginated": {
+      "get": {
+        "operationId": "HotelsController_findAllPaginated",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedHotelsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "hotels"
+        ]
+      }
+    },
     "/hotels/{id}": {
       "get": {
         "operationId": "HotelsController_findOne",
@@ -368,6 +402,62 @@
           "description",
           "location",
           "geo"
+        ]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "pageCount": {
+            "type": "number",
+            "example": 5
+          },
+          "total": {
+            "type": "number",
+            "example": 87
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "pageCount",
+          "total"
+        ]
+      },
+      "HotelsMetaDto": {
+        "type": "object",
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "pagination"
+        ]
+      },
+      "PaginatedHotelsDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/HotelsMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
         ]
       },
       "CreateBookingDto": {

@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../db/database.module';
 import { HotelDto } from './dto/hotel.dto';
+import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
 
 type HotelRow = {
   id: string;
@@ -36,6 +37,37 @@ export class HotelsService {
     );
 
     return result.rows.map(toHotelDto);
+  }
+
+  async findAllPaginated(page: number = 1): Promise<PaginatedHotelsDto> {
+    const LIMIT = 20;
+    const offset = (page - 1) * LIMIT;
+
+    const result = await this.pool.query<HotelRow>(
+      /*sql*/ `SELECT id, name, description, location, latitude, longitude
+       FROM hotels
+       ORDER BY name
+       LIMIT $1 OFFSET $2`,
+      [LIMIT, offset],
+    );
+
+    const countRows = await this.pool.query<{ total: number }>(
+      /*sql*/ `SELECT COUNT(*)::int AS total FROM hotels`,
+    );
+    const total = countRows.rows[0]?.total ?? 0;
+    const pageCount = Math.ceil(total / LIMIT);
+
+    const data = result.rows.map(toHotelDto);
+    const meta = {
+      pagination: {
+        page,
+        pageSize: LIMIT,
+        pageCount,
+        total,
+      },
+    };
+
+    return { data, meta };
   }
 
   async findOne(id: string): Promise<HotelDto> {

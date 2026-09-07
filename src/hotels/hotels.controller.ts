@@ -3,6 +3,8 @@ import { ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { HotelDto } from './dto/hotel.dto';
 import { ListHotelsQueryDto } from './dto/list-hotels-query.dto';
 import { HotelsService } from './hotels.service';
+import { ListHotelsQueryPaginatedDto } from './dto/list-hotels-query-paginated.dto';
+import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
 
 @ApiTags('hotels')
 @Controller('hotels')
@@ -13,6 +15,14 @@ export class HotelsController {
   @ApiOkResponse({ type: HotelDto, isArray: true })
   findAll(@Query() query: ListHotelsQueryDto): Promise<HotelDto[]> {
     return this.hotelsService.findAll(query.search);
+  }
+
+  @Get('paginated')
+  @ApiOkResponse({ type: PaginatedHotelsDto })
+  findAllPaginated(
+    @Query() query: ListHotelsQueryPaginatedDto,
+  ): Promise<PaginatedHotelsDto> {
+    return this.hotelsService.findAllPaginated(query.page);
   }
 
   @Get(':id')
