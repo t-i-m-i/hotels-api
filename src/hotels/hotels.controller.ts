@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { HotelDto } from './dto/hotel.dto';
 import { ListHotelsQueryDto } from './dto/list-hotels-query.dto';
+import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
 import { HotelsService } from './hotels.service';
 
 @ApiTags('hotels')
@@ -10,9 +11,9 @@ export class HotelsController {
   constructor(private readonly hotelsService: HotelsService) {}
 
   @Get()
-  @ApiOkResponse({ type: HotelDto, isArray: true })
-  findAll(@Query() query: ListHotelsQueryDto): Promise<HotelDto[]> {
-    return this.hotelsService.findAll(query.search);
+  @ApiOkResponse({ type: PaginatedHotelsDto })
+  findAll(@Query() query: ListHotelsQueryDto): Promise<PaginatedHotelsDto> {
+    return this.hotelsService.findAll(query.search, query.page, query.pageSize);
   }
 
   @Get(':id')
