@@ -79,6 +79,7 @@ export class HotelsService {
     if (!row) {
       throw new NotFoundException(`Hotel with id "${id}" not found`);
     }
+
     return toHotelDto(row);
   }
 }

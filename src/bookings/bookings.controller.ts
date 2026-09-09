@@ -20,6 +20,8 @@ import {
   ApiOkResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
+  ApiParam,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 import { DeleteSyntheticBookingsDto } from './dto/delete-synthetic-bookings.dto';
@@ -54,7 +56,9 @@ export class BookingsController {
   }
 
   @Get('hotel/:hotelId')
+  @ApiParam({ name: 'hotelId', format: 'uuid' })
   @ApiOkResponse({ type: BookingDto, isArray: true })
+  @ApiBadRequestResponse({ description: 'id is not a valid UUID' })
   findCurrentByHotel(
     @Param('hotelId', ParseUUIDPipe) hotelId: string,
   ): Promise<BookingDto[]> {
