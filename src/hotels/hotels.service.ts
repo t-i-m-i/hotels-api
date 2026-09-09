@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import { PG_POOL } from '../db/database.module';
 import { HotelDto } from './dto/hotel.dto';
 import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
+import { hotelImages } from './hotel-images';
 
 type HotelRow = {
   id: string;
@@ -20,6 +21,7 @@ function toHotelDto(row: HotelRow): HotelDto {
     description: row.description,
     location: row.location,
     geo: { latitude: row.latitude, longitude: row.longitude },
+    images: hotelImages(row.id, row.name),
   };
 }
 

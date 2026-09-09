@@ -55,31 +55,23 @@ Interactive Swagger docs are served at `http://localhost:3000/api` when the dev 
 
 ## Architecture
 
-Standard NestJS module structure — one feature module per resource, each with `*.module.ts`,
-`*.controller.ts`, `*.service.ts`, and a `dto/` folder:
+Standard NestJS layout: one feature module per resource (`*.module.ts` / `*.controller.ts` /
+`*.service.ts` / `dto/`), wired into `src/app.module.ts` alongside a global `ConfigModule` and
+`DatabaseModule`. The modules are small — read them directly. The things that aren't obvious from a
+quick look:
 
-- `src/app.module.ts` — root module; wires up global `ConfigModule`, `DatabaseModule`, and feature
-  modules (currently just `HotelsModule`).
-- `src/db/database.module.ts` — `@Global()` module providing a `pg.Pool` under the `PG_POOL` injection
-  token, built from `DATABASE_URL` with `ssl: { rejectUnauthorized: false }` (required by Neon).
-  Injected into `HotelsService` via `@Inject(PG_POOL)`.
-- `src/main.ts` — bootstraps the app for normal serving: enables CORS, registers the global
-  `ValidationPipe`, builds the Swagger document via `buildOpenApiDocument()` and mounts it at `/api`.
-- `src/openapi-document.ts` — the single source of truth for the `DocumentBuilder` config (title,
-  description, version). Shared between `main.ts` (live Swagger UI) and `generate-openapi.ts` (static
-  spec generation) so the two never drift.
-- `src/generate-openapi.ts` — standalone script (`bun run generate:openapi`) that boots a headless Nest
-  app, builds the same OpenAPI document, and writes it to `docs/openapi.json`. This file is committed and
-  consumed by the Expo app's codegen — treat route/DTO changes as breaking this contract until
-  regenerated.
-- `src/hotels/` — the one feature module today. `HotelsService` runs parameterized SQL against the
-  `hotels` table (via the injected `Pool`) and maps rows to `HotelDto`; `HotelsController` is a thin async
-  layer that maps query/path params to service calls and declares response shapes via
-  `@ApiOkResponse`/`@ApiNotFoundResponse`. `NotFoundException` in the service becomes the 404 documented
-  on the controller.
+- **`src/db/database.module.ts`** is `@Global()` and provides a `pg.Pool` under the `PG_POOL` token,
+  built from `DATABASE_URL` with `ssl: { rejectUnauthorized: false }` (Neon requires this). Services
+  take it via `@Inject(PG_POOL)` and run parameterized SQL directly — no ORM.
+- **`src/openapi-document.ts`** holds the one `DocumentBuilder` config, imported by both `src/main.ts`
+  (live Swagger UI at `/api`) and `src/generate-openapi.ts` (the `generate:openapi` script that writes
+  `docs/openapi.json`). Edit it in one place so the live docs and the committed spec never drift.
+- Controllers stay thin: map params to a service call and declare response shapes with
+  `@ApiOkResponse` / `@ApiNotFoundResponse`. A `NotFoundException` thrown in a service is what produces
+  the documented 404.
 
-**Contract-first discipline**: because `docs/openapi.json` is consumed by a separate repo, any change to
-a controller route signature or DTO field must be followed by `bun run generate:openapi` in the same
+**Contract-first discipline**: `docs/openapi.json` is committed and consumed by a separate repo. Any
+change to a route signature or DTO field must be followed by `bun run generate:openapi` in the same
 change. DTOs are the only thing allowed to shape a response — never return a raw internal type from a
 controller.
 

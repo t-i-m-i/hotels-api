@@ -11,6 +11,24 @@ export class GeoDto {
   longitude!: number;
 }
 
+export class HotelImageDto {
+  @ApiProperty({
+    example: 'hotels/shared/01.jpg',
+    description:
+      'Storage key, relative to the configured storage/CDN base URL. The client resolves it as `${STORAGE_URL}/${path}`.',
+  })
+  path!: string;
+
+  @ApiProperty({ example: 'Hotel Barcino Central — photo 1' })
+  alt!: string;
+
+  @ApiProperty({ example: 1600, description: 'Intrinsic width in pixels.' })
+  width!: number;
+
+  @ApiProperty({ example: 1067, description: 'Intrinsic height in pixels.' })
+  height!: number;
+}
+
 export class HotelDto {
   @ApiProperty({ example: '1' })
   id!: string;
@@ -29,4 +47,11 @@ export class HotelDto {
 
   @ApiProperty({ type: GeoDto })
   geo!: GeoDto;
+
+  @ApiProperty({
+    type: [HotelImageDto],
+    description:
+      'Gallery images for the hotel, in display order. First entry is the cover.',
+  })
+  images!: HotelImageDto[];
 }

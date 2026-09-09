@@ -362,6 +362,36 @@
           "longitude"
         ]
       },
+      "HotelImageDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "example": "hotels/shared/01.jpg",
+            "description": "Storage key, relative to the configured storage/CDN base URL. The client resolves it as `${STORAGE_URL}/${path}`."
+          },
+          "alt": {
+            "type": "string",
+            "example": "Hotel Barcino Central — photo 1"
+          },
+          "width": {
+            "type": "number",
+            "example": 1600,
+            "description": "Intrinsic width in pixels."
+          },
+          "height": {
+            "type": "number",
+            "example": 1067,
+            "description": "Intrinsic height in pixels."
+          }
+        },
+        "required": [
+          "path",
+          "alt",
+          "width",
+          "height"
+        ]
+      },
       "HotelDto": {
         "type": "object",
         "properties": {
@@ -383,6 +413,13 @@
           },
           "geo": {
             "$ref": "#/components/schemas/GeoDto"
+          },
+          "images": {
+            "description": "Gallery images for the hotel, in display order. First entry is the cover.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelImageDto"
+            }
           }
         },
         "required": [
@@ -390,7 +427,8 @@
           "name",
           "description",
           "location",
-          "geo"
+          "geo",
+          "images"
         ]
       },
       "PaginationDto": {
