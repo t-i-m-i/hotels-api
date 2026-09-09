@@ -18,6 +18,7 @@ describe('Hotels (e2e)', () => {
     // main.ts's bootstrap() is never called in tests, so anything it sets
     // up on the app (global pipes, CORS, ...) has to be repeated here to
     // match what actually runs in dev/prod.
+    app.enableShutdownHooks();
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true }),
     );
@@ -28,14 +29,25 @@ describe('Hotels (e2e)', () => {
     await app.close();
   });
 
-  it('GET /hotels returns the seeded hotels', async () => {
+  it('GET /hotels returns a page of seeded hotels', async () => {
     const response = await request(app.getHttpServer())
       .get('/hotels')
       .expect(200);
 
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.length).toBeGreaterThan(0);
-    expect(response.body[0]).toMatchObject({
+    expect(response.body).toMatchObject({
+      data: expect.any(Array),
+      meta: {
+        pagination: {
+          page: expect.any(Number),
+          pageSize: expect.any(Number),
+          pageCount: expect.any(Number),
+          total: expect.any(Number),
+        },
+      },
+    });
+
+    expect(response.body.data.length).toBeGreaterThan(0);
+    expect(response.body.data[0]).toMatchObject({
       id: expect.any(String),
       name: expect.any(String),
       location: expect.any(String),
@@ -43,6 +55,13 @@ describe('Hotels (e2e)', () => {
         latitude: expect.any(Number),
         longitude: expect.any(Number),
       },
+      images: expect.any(Array),
+    });
+    expect(response.body.data[0].images[0]).toMatchObject({
+      path: expect.any(String),
+      alt: expect.any(String),
+      width: expect.any(Number),
+      height: expect.any(Number),
     });
   });
 
