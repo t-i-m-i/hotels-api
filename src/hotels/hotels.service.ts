@@ -82,4 +82,43 @@ export class HotelsService {
 
     return toHotelDto(row);
   }
+
+  async findWithinBounds(
+    bounds: { swLat: number; swLng: number; neLat: number; neLng: number },
+    search?: string,
+  ): Promise<HotelDto[]> {
+    // Clamp latitude to the valid range so a zoomed-out map ("neLat: 140")
+    // degrades to "everything" instead of returning nothing.
+    const latLo = Math.max(-90, Math.min(bounds.swLat, bounds.neLat));
+    const latHi = Math.min(90, Math.max(bounds.swLat, bounds.neLat));
+
+    // Longitude: normal case is swLng <= neLng. A viewport straddling the
+    // antimeridian (±180) arrives as swLng > neLng and means
+    // "longitude >= swLng OR longitude <= neLng". Our data is all in Europe so
+    // this branch is dead today, but it's one line and avoids a silent empty
+    // result if that ever changes.
+    const crossesAntimeridian = bounds.swLng > bounds.neLng;
+    const lonClause = crossesAntimeridian
+      ? '(longitude >= $3 OR longitude <= $4)'
+      : 'longitude BETWEEN $3 AND $4';
+
+    const sql = /*sql*/ `
+    SELECT id, name, description, location, latitude, longitude
+    FROM hotels
+    WHERE latitude BETWEEN $1 AND $2
+      AND ${lonClause}
+      AND ($5::text IS NULL OR name ILIKE '%' || $5 || '%' OR location ILIKE '%' || $5 || '%')
+    ORDER BY name
+    LIMIT 500`;
+
+    const { rows } = await this.pool.query<HotelRow>(sql, [
+      latLo,
+      latHi,
+      bounds.swLng,
+      bounds.neLng,
+      search ?? null,
+    ]);
+
+    return rows.map(toHotelDto);
+  }
 }

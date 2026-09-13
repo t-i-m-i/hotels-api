@@ -10,6 +10,7 @@ import { HotelDto } from './dto/hotel.dto';
 import { ListHotelsQueryDto } from './dto/list-hotels-query.dto';
 import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
 import { HotelsService } from './hotels.service';
+import { HotelsWithinBoundsQueryDto } from './dto/hotels-within-bounds-query.dto';
 
 @ApiTags('hotels')
 @Controller('hotels')
@@ -20,6 +21,14 @@ export class HotelsController {
   @ApiOkResponse({ type: PaginatedHotelsDto })
   findAll(@Query() query: ListHotelsQueryDto): Promise<PaginatedHotelsDto> {
     return this.hotelsService.findAll(query.search, query.page, query.pageSize);
+  }
+
+  @Get('within-bounds')
+  @ApiOkResponse({ type: HotelDto, isArray: true })
+  findWithinBounds(
+    @Query() query: HotelsWithinBoundsQueryDto,
+  ): Promise<HotelDto[]> {
+    return this.hotelsService.findWithinBounds(query, query.search);
   }
 
   @Get(':id')

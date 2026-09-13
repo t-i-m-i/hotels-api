@@ -59,6 +59,81 @@
         ]
       }
     },
+    "/hotels/within-bounds": {
+      "get": {
+        "operationId": "HotelsController_findWithinBounds",
+        "parameters": [
+          {
+            "name": "swLat",
+            "required": true,
+            "in": "query",
+            "description": "South-west corner latitude",
+            "schema": {
+              "example": 41,
+              "type": "number"
+            }
+          },
+          {
+            "name": "swLng",
+            "required": true,
+            "in": "query",
+            "description": "South-west corner longitude",
+            "schema": {
+              "example": 2,
+              "type": "number"
+            }
+          },
+          {
+            "name": "neLat",
+            "required": true,
+            "in": "query",
+            "description": "North-east corner latitude",
+            "schema": {
+              "example": 41.6,
+              "type": "number"
+            }
+          },
+          {
+            "name": "neLng",
+            "required": true,
+            "in": "query",
+            "description": "North-east corner longitude",
+            "schema": {
+              "example": 2.4,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Case-insensitive filter matched against name and location",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HotelDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "hotels"
+        ]
+      }
+    },
     "/hotels/{id}": {
       "get": {
         "operationId": "HotelsController_findOne",
