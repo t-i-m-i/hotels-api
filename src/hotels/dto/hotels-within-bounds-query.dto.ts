@@ -1,13 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsNumber,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsNumber, Max, Min } from 'class-validator';
 
 export class HotelsWithinBoundsQueryDto {
   @ApiProperty({ example: 41.0, description: 'South-west corner latitude' })
@@ -37,13 +30,4 @@ export class HotelsWithinBoundsQueryDto {
   @Min(-180)
   @Max(180)
   neLng!: number;
-
-  @ApiPropertyOptional({
-    description: 'Case-insensitive filter matched against name and location',
-    maxLength: 100,
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  search?: string;
 }

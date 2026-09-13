@@ -83,10 +83,12 @@ export class HotelsService {
     return toHotelDto(row);
   }
 
-  async findWithinBounds(
-    bounds: { swLat: number; swLng: number; neLat: number; neLng: number },
-    search?: string,
-  ): Promise<HotelDto[]> {
+  async findWithinBounds(bounds: {
+    swLat: number;
+    swLng: number;
+    neLat: number;
+    neLng: number;
+  }): Promise<HotelDto[]> {
     // Clamp latitude to the valid range so a zoomed-out map ("neLat: 140")
     // degrades to "everything" instead of returning nothing.
     const latLo = Math.max(-90, Math.min(bounds.swLat, bounds.neLat));
@@ -107,7 +109,6 @@ export class HotelsService {
     FROM hotels
     WHERE latitude BETWEEN $1 AND $2
       AND ${lonClause}
-      AND ($5::text IS NULL OR name ILIKE '%' || $5 || '%' OR location ILIKE '%' || $5 || '%')
     ORDER BY name
     LIMIT 500`;
 
@@ -116,7 +117,6 @@ export class HotelsService {
       latHi,
       bounds.swLng,
       bounds.neLng,
-      search ?? null,
     ]);
 
     return rows.map(toHotelDto);

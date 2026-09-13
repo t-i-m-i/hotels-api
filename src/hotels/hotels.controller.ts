@@ -28,7 +28,7 @@ export class HotelsController {
   findWithinBounds(
     @Query() query: HotelsWithinBoundsQueryDto,
   ): Promise<HotelDto[]> {
-    return this.hotelsService.findWithinBounds(query, query.search);
+    return this.hotelsService.findWithinBounds(query);
   }
 
   @Get(':id')

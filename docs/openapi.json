@@ -102,16 +102,6 @@
               "example": 2.4,
               "type": "number"
             }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Case-insensitive filter matched against name and location",
-            "schema": {
-              "maxLength": 100,
-              "type": "string"
-            }
           }
         ],
         "responses": {
