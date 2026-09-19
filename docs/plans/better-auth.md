@@ -1,7 +1,8 @@
 # BetterAuth implementation plan
 
-> Phase 1 (email/password) is implemented — see "Phase 1 implementation notes" at the
-> bottom for what changed from this plan during implementation.
+> Phase 1 (email/password) and Phase 2 (GitHub social sign-in) are both implemented —
+> see "Phase 1 implementation notes" and "Phase 2 implementation notes" at the bottom
+> for what changed from this plan during implementation.
 
 ## Decisions
 
@@ -161,7 +162,7 @@ Decided during implementation, superseding the "open items" above:
   (`test/__mocks__/@bull-board/nestjs.ts`) — see the log for details. All of `type-check`,
   `lint`, `test`, and `test:e2e` are green.
 
-## Manual verification performed
+## Manual verification performed (Phase 1)
 
 - `POST /api/auth/sign-up/email` → 200, creates a `users` row (`role_id` defaulted to 2,
   `first_name`/`last_name` `NULL`) and an `accounts` row (`provider_id: "credential"`, hashed
@@ -171,3 +172,31 @@ Decided during implementation, superseding the "open items" above:
 - `GET /me` → 401 without a session cookie, 200 with one.
 - `GET /hotels`, `GET /bookings` → still 200 with no auth (unaffected by the global guard).
 - `bun run type-check`, `bun run test` (unit) both pass.
+
+## Phase 2 implementation notes
+
+As planned — no schema changes needed, `accounts` was already designed for multiple
+provider rows per user. Only change: `socialProviders.github` added to
+`src/auth/auth.ts`, reading `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` from `.env` (see
+`.env.example` for the GitHub OAuth App setup — homepage URL and callback URL).
+
+One thing worth calling out for whoever tests this next: **`curl` can't test the OAuth
+flow**, because `POST /api/auth/sign-in/social` sets a short-lived `better-auth.state`
+cookie that has to round-trip through the *same browser* GitHub redirects back to. A
+`curl` request gets a real authorize URL back, but opening that URL in a browser
+separately fails with `state_mismatch` — the state cookie never made it there. Test
+from an actual browser tab on `localhost:3000` instead (e.g. paste a `fetch(...)` call
+into DevTools console on `/api`), not via a separate HTTP client.
+
+### Manual verification performed (Phase 2)
+
+- `POST /api/auth/sign-in/social` with `{"provider":"github"}` → 200, returns a valid
+  `https://github.com/login/oauth/authorize?...` URL with correct `client_id`,
+  `redirect_uri` (`/api/auth/callback/github`), and PKCE params.
+- Full browser round-trip (authorize → GitHub login → callback → session) verified
+  end-to-end: `GET /me` after the redirect returned a valid session.
+- Confirmed in the database: the GitHub sign-in created a `users` row (`name`/`email`
+  from the GitHub profile, `email_verified: true`, `image` set to the GitHub avatar
+  URL, `role_id` defaulted to `2` same as email sign-ups) and an `accounts` row
+  (`provider_id: "github"`, `account_id` = GitHub's numeric user id, access token
+  stored).

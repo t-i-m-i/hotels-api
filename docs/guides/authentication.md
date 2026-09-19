@@ -23,12 +23,33 @@ see BetterAuth's own docs at https://www.better-auth.com/docs.
 ## What's configured here
 
 - `emailAndPassword` — enabled (Phase 1).
+- `socialProviders.github` — enabled (Phase 2). Requires `GITHUB_CLIENT_ID`/
+  `GITHUB_CLIENT_SECRET` in `.env` — see `.env.example` for how to create the GitHub
+  OAuth App. Sign in with `POST /api/auth/sign-in/social` (`{"provider": "github"}`),
+  which returns a GitHub authorize URL to redirect the browser to.
 - `user`/`session`/`account`/`verification` are mapped onto this project's own table
   names and snake_case columns (see `src/auth/auth.ts` and
   `docs/plans/better-auth.md` for why) — `users` is the same table `bookings.user_id`
   references, not a separate identity table.
 - `GET /me` (`src/auth/me.controller.ts`) is a regular Nest route — not part of
   BetterAuth — kept as a minimal example of reading the session via `@Session()`.
+
+## Testing the social sign-in flow manually
+
+`POST /api/auth/sign-in/social` sets a short-lived `better-auth.state` cookie that has
+to round-trip through the *same browser* GitHub redirects back to — a tool like `curl`
+gets back a valid authorize URL, but opening that URL in an actual browser separately
+fails with `state_mismatch`, since the state cookie never reached that browser. Test
+from a real browser tab on this app's own origin instead, e.g. open `/api` and run in
+DevTools console:
+
+```js
+fetch('/api/auth/sign-in/social', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ provider: 'github', callbackURL: 'http://localhost:3000/me' }),
+}).then(r => r.json()).then(d => (location.href = d.url));
+```
 
 ## Route protection
 

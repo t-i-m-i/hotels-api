@@ -17,6 +17,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    },
+  },
   // Without this, better-auth's default ID generator produces a nanoid-style
   // string, not a UUID, which fails against this schema's `uuid` columns.
   advanced: {
