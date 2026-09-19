@@ -122,7 +122,10 @@ export class HotelsService {
     return rows.map(toHotelDto);
   }
 
-  async findNearest(coords: { latitude: number; longitude: number }): Promise<HotelDto[]> {
+  async findNearest(coords: {
+    latitude: number;
+    longitude: number;
+  }): Promise<HotelDto[]> {
     const sql = /*sql*/ `
     SELECT id, name, description, location, latitude, longitude
     FROM hotels
