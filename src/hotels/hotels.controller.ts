@@ -11,6 +11,7 @@ import { ListHotelsQueryDto } from './dto/list-hotels-query.dto';
 import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
 import { HotelsService } from './hotels.service';
 import { HotelsWithinBoundsQueryDto } from './dto/hotels-within-bounds-query.dto';
+import { NearestHotelsQueryDto } from "./dto/nearest-hotels-query.dto";
 
 @ApiTags('hotels')
 @Controller('hotels')
@@ -29,6 +30,14 @@ export class HotelsController {
     @Query() query: HotelsWithinBoundsQueryDto,
   ): Promise<HotelDto[]> {
     return this.hotelsService.findWithinBounds(query);
+  }
+
+  @Get('nearest')
+  @ApiOkResponse({ type: HotelDto, isArray: true })
+  findNearest(
+    @Query() query: NearestHotelsQueryDto,
+  ): Promise<HotelDto[]> {
+    return this.hotelsService.findNearest(query);
   }
 
   @Get(':id')

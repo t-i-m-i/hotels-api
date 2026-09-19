@@ -121,4 +121,20 @@ export class HotelsService {
 
     return rows.map(toHotelDto);
   }
+
+  async findNearest(coords: { latitude: number; longitude: number }): Promise<HotelDto[]> {
+    const sql = /*sql*/ `
+    SELECT id, name, description, location, latitude, longitude
+    FROM hotels
+    WHERE ST_DWITHIN(coordinates, ST_Point($1, $2)::geography, 300000)
+    ORDER BY coordinates <-> ST_Point($1, $2)::geography
+    LIMIT 5`;
+
+    const { rows } = await this.pool.query<HotelRow>(sql, [
+      coords.longitude,
+      coords.latitude,
+    ]);
+
+    return rows.map(toHotelDto);
+  }
 }
