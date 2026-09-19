@@ -1,6 +1,20 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/me": {
+      "get": {
+        "operationId": "MeController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The signed-in user, from the BetterAuth session cookie."
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/hotels": {
       "get": {
         "operationId": "HotelsController_findAll",
@@ -100,6 +114,51 @@
             "description": "North-east corner longitude",
             "schema": {
               "example": 2.4,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HotelDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "hotels"
+        ]
+      }
+    },
+    "/hotels/nearest": {
+      "get": {
+        "operationId": "HotelsController_findNearest",
+        "parameters": [
+          {
+            "name": "longitude",
+            "required": true,
+            "in": "query",
+            "description": "Longitude",
+            "schema": {
+              "example": 2.17,
+              "type": "number"
+            }
+          },
+          {
+            "name": "latitude",
+            "required": true,
+            "in": "query",
+            "description": "Latitude",
+            "schema": {
+              "example": 41.38,
               "type": "number"
             }
           }

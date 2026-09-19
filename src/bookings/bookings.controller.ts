@@ -10,6 +10,7 @@ import {
   HttpCode,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -27,6 +28,7 @@ import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 import { DeleteSyntheticBookingsDto } from './dto/delete-synthetic-bookings.dto';
 
 @ApiTags('bookings')
+@AllowAnonymous()
 @Controller('bookings')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}

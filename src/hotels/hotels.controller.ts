@@ -6,6 +6,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { HotelDto } from './dto/hotel.dto';
 import { ListHotelsQueryDto } from './dto/list-hotels-query.dto';
 import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
@@ -14,6 +15,7 @@ import { HotelsWithinBoundsQueryDto } from './dto/hotels-within-bounds-query.dto
 import { NearestHotelsQueryDto } from "./dto/nearest-hotels-query.dto";
 
 @ApiTags('hotels')
+@AllowAnonymous()
 @Controller('hotels')
 export class HotelsController {
   constructor(private readonly hotelsService: HotelsService) {}

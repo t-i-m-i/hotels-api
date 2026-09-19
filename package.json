@@ -19,11 +19,11 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "lint:ci": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:debug": "NODE_OPTIONS=\"--experimental-vm-modules --inspect-brk\" node -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@bull-board/api": "^9.6.0",
@@ -36,6 +36,8 @@
     "@nestjs/event-emitter": "^12.0.0",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.6",
+    "@thallesp/nestjs-better-auth": "^2.8.0",
+    "better-auth": "^1.7.5",
     "bull": "^4.16.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -76,12 +78,22 @@
     "moduleFileExtensions": [
       "js",
       "json",
-      "ts"
+      "ts",
+      "mjs"
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "useESM": true,
+          "tsconfig": "<rootDir>/../tsconfig.jest.json"
+        }
+      ]
     },
     "transformIgnorePatterns": [
       "node_modules/(?!(@nestjs/bull|@nestjs/bull-shared|@nestjs/event-emitter|eventemitter2)/)"

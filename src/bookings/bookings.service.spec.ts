@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+import type { Mock } from 'jest-mock';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bull';
@@ -8,12 +10,12 @@ import { EMAIL_QUEUE } from './bookings.constants';
 
 describe('BookingsService', () => {
   let service: BookingsService;
-  let pool: { query: jest.Mock };
+  let pool: { query: Mock<(...args: any[]) => Promise<{ rows: any[] }>> };
 
   beforeEach(async () => {
     // A fake stand-in for the real pg Pool — just enough shape (a `query`
     // method) for BookingsService to call, fully controlled by each test.
-    pool = { query: jest.fn() };
+    pool = { query: jest.fn<(...args: any[]) => Promise<{ rows: any[] }>>() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

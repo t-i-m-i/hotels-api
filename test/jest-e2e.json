@@ -1,11 +1,18 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": ["js", "json", "ts", "mjs"],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "forceExit": true,
+  "extensionsToTreatAsEsm": [".ts"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "useESM": true,
+        "tsconfig": "<rootDir>/../tsconfig.jest.json"
+      }
+    ]
   },
   "transformIgnorePatterns": [
     "node_modules/(?!(@nestjs/bull|@nestjs/bull-shared|@nestjs/event-emitter|eventemitter2)/)"

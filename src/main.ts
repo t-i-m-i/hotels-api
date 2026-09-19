@@ -5,7 +5,9 @@ import { AppModule } from './app.module';
 import { buildOpenApiDocument } from './openapi-document';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // @thallesp/nestjs-better-auth needs the raw request body for its own
+  // routes; it re-adds body parsing for every other route.
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
 
   app.enableCors();
   app.enableShutdownHooks();
