@@ -48,9 +48,12 @@ record.
   `@bull-board/nestjs` (`QueueBoardModule`) `require()`s it synchronously, which plain
   Node's `require(esm)` handles fine but Jest's own ESM loader (`jest-runtime`'s
   `EsmLoader`) doesn't — it deterministically throws `Cannot require() ES Module ...
-  it is currently being loaded by a concurrent import()`. This is a Bull/BullBoard
-  dependency-graph issue, unrelated to auth; a real fix means changing how
-  `QueueBoardModule` imports Bull Board (e.g. a dynamic `import()`), which is out of
-  scope here. `bun run test:e2e` remains broken; `bun run test` (unit) is fully fixed.
+  it is currently being loaded by a concurrent import()`. Fixed with a manual mock
+  (`test/__mocks__/@bull-board/nestjs.ts`, wired via `moduleNameMapper` in
+  `test/jest-e2e.json` — Jest's automatic node_modules mock discovery didn't kick in
+  here, so it's mapped explicitly) that no-ops `BullBoardModule`'s static methods.
+  `QueueBoardModule` only uses this to mount the `/queues` debug dashboard, which
+  `hotels.e2e-spec.ts` never touches — the real `QueueBoardModule` is untouched
+  outside tests. Both `bun run test` and `bun run test:e2e` are fully green now.
 - `role_id` is `NOT NULL` with no prior default — self-registered sign-ups would have
   failed the constraint without adding `DEFAULT 2`.

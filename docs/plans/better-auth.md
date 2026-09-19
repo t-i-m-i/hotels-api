@@ -154,15 +154,12 @@ Decided during implementation, superseding the "open items" above:
   uses top-level `import.meta.url`), which the CJS-based Jest/ts-jest setup this project had
   couldn't execute. Fixed for real by migrating Jest to run under Node's
   `--experimental-vm-modules` (see `tsconfig.jest.json`, `package.json`'s `jest` key, and
-  `test/jest-e2e.json`) — `bun run test` (unit) now loads the real, unmocked package.
-  `bun run test:e2e` is still broken, but for an unrelated reason discovered along the way:
-  `@nestjs/bull-shared` (`"type": "module"`) vs. `@bull-board/nestjs`'s synchronous `require()`
-  of it — a pre-existing Bull/BullBoard dual-package hazard that Jest's ESM loader trips on
-  (plain Node handles it fine). Fixing that means changing how `QueueBoardModule` imports Bull
-  Board, out of scope for auth. Auth behavior was verified manually end-to-end against the
-  running dev server instead (sign-up, sign-in, `get-session`, `/me` with/without cookie,
-  existing routes still open) — see `docs/logs/010-betterauth-email-password.md` for the full
-  account.
+  `test/jest-e2e.json`) — both `bun run test` (unit) and `bun run test:e2e` now load the real,
+  unmocked `@thallesp/nestjs-better-auth` package. That same migration surfaced an unrelated,
+  pre-existing hazard between `@bull-board/nestjs` and `@nestjs/bull-shared`
+  (`"type": "module"`), fixed with a small manual mock scoped to e2e tests
+  (`test/__mocks__/@bull-board/nestjs.ts`) — see the log for details. All of `type-check`,
+  `lint`, `test`, and `test:e2e` are green.
 
 ## Manual verification performed
 

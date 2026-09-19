@@ -5,6 +5,9 @@
   "testRegex": ".e2e-spec.ts$",
   "forceExit": true,
   "extensionsToTreatAsEsm": [".ts"],
+  "moduleNameMapper": {
+    "^@bull-board/nestjs$": "<rootDir>/__mocks__/@bull-board/nestjs.ts"
+  },
   "transform": {
     "^.+\\.(t|j)s$": [
       "ts-jest",
