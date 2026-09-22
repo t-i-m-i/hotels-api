@@ -9,6 +9,7 @@ import {
   Headers,
   HttpCode,
   ParseUUIDPipe,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { BookingsService } from './bookings.service';
@@ -26,6 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 import { DeleteSyntheticBookingsDto } from './dto/delete-synthetic-bookings.dto';
+import { LoggingInterceptor } from 'src/logging.interceptor';
 
 @ApiTags('bookings')
 @AllowAnonymous()
@@ -69,6 +71,7 @@ export class BookingsController {
 
   @Get('user/:userId')
   @ApiOkResponse({ type: BookingDetailsDto, isArray: true })
+  @UseInterceptors(LoggingInterceptor)
   getBookingsByUser(
     @Param('userId', ParseUUIDPipe) userId: string,
   ): Promise<BookingDetailsDto[]> {
