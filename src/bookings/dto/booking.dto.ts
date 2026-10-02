@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { BookingStatus } from '../booking-status.enum';
 
 export class BookingDto {
   @ApiProperty({ example: '38dca5bd-0417-4971-baee-056e1aa3ce21' })
@@ -15,6 +16,9 @@ export class BookingDto {
 
   @ApiProperty({ example: '2026-09-10' })
   checkOut!: string;
+
+  @ApiProperty({ enum: BookingStatus, example: BookingStatus.Pending })
+  status!: BookingStatus;
 }
 
 export class BookingHotelSummaryDto {

@@ -15,6 +15,8 @@ import { BookingCreatedEvent } from './events/booking-created.event';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
+import { BookingStatus } from './booking-status.enum';
+import { FirebasePushService } from '../push-notifications/firebase-push.service';
 
 type BookingRow = {
   id: string;
@@ -22,6 +24,7 @@ type BookingRow = {
   hotel_id: string;
   check_in: Date;
   check_out: Date;
+  status: BookingStatus;
 };
 
 // node-pg parses a `date` column into a Date at local midnight for that
@@ -42,6 +45,7 @@ function toBookingDto(row: BookingRow): BookingDto {
     hotelId: row.hotel_id,
     checkIn: formatDateOnly(row.check_in),
     checkOut: formatDateOnly(row.check_out),
+    status: row.status,
   };
 }
 
@@ -70,6 +74,7 @@ export class BookingsService {
     @Inject(PG_POOL) private readonly pool: Pool,
     @InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue,
     private readonly eventEmitter: EventEmitter2,
+    private readonly firebasePushService: FirebasePushService,
   ) {}
 
   private assertCheckInNotInPast(checkIn: string) {
@@ -202,6 +207,39 @@ export class BookingsService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(id: string, updateBookingDto: UpdateBookingDto) {
     return `This action updates a #${id} booking`;
+  }
+
+  async updateStatus(id: string, status: BookingStatus): Promise<BookingDto> {
+    const result = await this.pool.query<BookingRow>(
+      /*sql*/ `UPDATE bookings SET status = $1, updated_at = now()
+        WHERE id = $2
+        RETURNING *`,
+      [status, id],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      throw new NotFoundException(`Booking with id ${id} not found`);
+    }
+    const booking = toBookingDto(row);
+
+    if (status === BookingStatus.Confirmed) {
+      // Fire-and-forget, same as the email/analytics side effects in
+      // create() — a slow or failing push shouldn't hold up the response.
+      this.firebasePushService
+        .sendToUser(booking.userId, {
+          title: 'Booking confirmed',
+          body: 'Booking confirmed by host',
+          data: { url: `hotels://booking/${booking.id}` },
+        })
+        .catch((err: unknown) =>
+          console.error(
+            `Failed to send push notification for booking ${booking.id}`,
+            err,
+          ),
+        );
+    }
+
+    return booking;
   }
 
   async remove(id: string): Promise<void> {

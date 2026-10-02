@@ -441,6 +441,50 @@
         ]
       }
     },
+    "/bookings/{id}/status": {
+      "patch": {
+        "operationId": "BookingsController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found"
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
     "/bookings/synthetic": {
       "delete": {
         "operationId": "BookingsController_removeSynthetic",
@@ -459,6 +503,30 @@
         },
         "tags": [
           "bookings"
+        ]
+      }
+    },
+    "/push-tokens": {
+      "post": {
+        "operationId": "PushTokensController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPushTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Push token registered"
+          }
+        },
+        "tags": [
+          "push-tokens"
         ]
       }
     }
@@ -663,6 +731,17 @@
           "checkOut": {
             "type": "string",
             "example": "2026-09-10"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "completed",
+              "no_show"
+            ],
+            "example": "pending"
           }
         },
         "required": [
@@ -670,7 +749,8 @@
           "userId",
           "hotelId",
           "checkIn",
-          "checkOut"
+          "checkOut",
+          "status"
         ]
       },
       "BookingHotelSummaryDto": {
@@ -743,6 +823,25 @@
           }
         }
       },
+      "UpdateBookingStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "completed",
+              "no_show"
+            ],
+            "example": "confirmed"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
       "DeleteSyntheticBookingsDto": {
         "type": "object",
         "properties": {
@@ -754,6 +853,32 @@
         },
         "required": [
           "deletedCount"
+        ]
+      },
+      "RegisterPushTokenDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "bf721a73-1a8b-4de2-b74b-a747e1197d3f"
+          },
+          "token": {
+            "type": "string",
+            "example": "f3a1c9...:APA91b..."
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "example": "ios"
+          }
+        },
+        "required": [
+          "userId",
+          "token",
+          "platform"
         ]
       }
     }

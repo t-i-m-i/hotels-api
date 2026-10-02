@@ -7,9 +7,13 @@ import { BookingNotificationService } from './booking-notification.service';
 import { ResendEmailService } from './resend-email.service';
 import { BookingAnalyticsListener } from './listeners/booking-analytics.listener';
 import { EmailQueueProcessor } from './processors/email-queue.processor';
+import { PushNotificationsModule } from '../push-notifications/push-notifications.module';
 
 @Module({
-  imports: [BullModule.registerQueue({ name: EMAIL_QUEUE })],
+  imports: [
+    BullModule.registerQueue({ name: EMAIL_QUEUE }),
+    PushNotificationsModule,
+  ],
   controllers: [BookingsController],
   providers: [
     BookingsService,

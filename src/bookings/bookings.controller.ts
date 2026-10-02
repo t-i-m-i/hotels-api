@@ -27,6 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 import { DeleteSyntheticBookingsDto } from './dto/delete-synthetic-bookings.dto';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { LoggingInterceptor } from 'src/logging.interceptor';
 
 @ApiTags('bookings')
@@ -88,6 +89,22 @@ export class BookingsController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
     return this.bookingsService.update(id, updateBookingDto);
+  }
+
+  // TODO(auth): this endpoint does not check that the caller is allowed to
+  // change this booking's status (e.g. only the hotel/host should be able
+  // to confirm it) — there's no auth on this app yet, so for now it's
+  // callable by anyone, same as the rest of this controller. Add an
+  // ownership/role check once BetterAuth is wired in here.
+  @Patch(':id/status')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: BookingDto })
+  @ApiNotFoundResponse({ description: 'Booking not found' })
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateBookingStatusDto: UpdateBookingStatusDto,
+  ): Promise<BookingDto> {
+    return this.bookingsService.updateStatus(id, updateBookingStatusDto.status);
   }
 
   // Declared before `:id` — Nest matches routes in order, so this literal
