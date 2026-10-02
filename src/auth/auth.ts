@@ -17,6 +17,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  // Minimum required for @Hook/@BeforeHook/@AfterHook providers (see
+  // AuthLoggingHook) to be able to register themselves. Empty on purpose —
+  // hooks attach to this at runtime, not here.
+  hooks: {},
   socialProviders: {
     github: {
       clientId: process.env.GITHUB_CLIENT_ID as string,
