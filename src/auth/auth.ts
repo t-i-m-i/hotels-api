@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { betterAuth } from 'better-auth';
-import { openAPI } from 'better-auth/plugins';
+import { customSession, openAPI } from 'better-auth/plugins';
 import { expo } from '@better-auth/expo';
 import { Pool } from 'pg';
 
@@ -55,6 +55,23 @@ export const auth = betterAuth({
     // account's password directly instead.
     deleteUser: {
       enabled: true,
+    },
+  },
+  // role_id on `users` is gone — a user can hold multiple roles now via
+  // user_roles (see migrations/*_create-user-roles-table.sql). Every new
+  // signup gets exactly one row here (guest, role_id 2); host/admin rows
+  // are only ever added by hand (or, later, by the payment flow) — never
+  // self-service.
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await pool.query(
+            'insert into user_roles (user_id, role_id) values ($1, 2)',
+            [user.id],
+          );
+        },
+      },
     },
   },
   session: {
@@ -112,5 +129,28 @@ export const auth = betterAuth({
   // /expo-authorization-proxy (which the app's social sign-in flow opens in
   // a system browser) doesn't exist at all, and the `expo-origin` header
   // the app sends on every request never gets promoted to `origin`.
-  plugins: [expo(), openAPI()],
+  plugins: [
+    expo(),
+    openAPI(),
+    // Attaches the resolved role *names* (not role_id) to every session
+    // response, by joining user_roles -> roles fresh on each request.
+    // additionalFields can't do this — it only maps a single column on the
+    // user's own row, and roles is now a one-to-many relationship. This
+    // also means the client never needs to change shape again if a user
+    // ends up holding more than one role.
+    customSession(async ({ user, session }) => {
+      const { rows } = await pool.query<{ name: string }>(
+        `select r.name
+         from user_roles ur
+         join roles r on r.id = ur.role_id
+         where ur.user_id = $1`,
+        [user.id],
+      );
+
+      return {
+        user: { ...user, roles: rows.map((row) => row.name) },
+        session,
+      };
+    }),
+  ],
 });
