@@ -33,7 +33,6 @@ import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { LoggingInterceptor } from 'src/logging.interceptor';
 
 @ApiTags('bookings')
-// @AllowAnonymous()
 @Controller('bookings')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
@@ -46,13 +45,14 @@ export class BookingsController {
       'Set to "true" to tag this booking as test data created by an automated e2e suite, rather than a real reservation. Synthetic bookings are excluded from nothing at read time — they behave like any other booking — but can be bulk-deleted via DELETE /bookings/synthetic.',
   })
   @ApiCreatedResponse({ type: BookingDto })
-  @AllowAnonymous()
   create(
     @Body() createBookingDto: CreateBookingDto,
+    @Session() session: UserSession,
     @Headers('x-synthetic-booking') syntheticHeader?: string,
   ): Promise<BookingDto> {
     return this.bookingsService.create(
       createBookingDto,
+      session.user.id,
       syntheticHeader === 'true',
     );
   }

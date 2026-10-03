@@ -41,6 +41,13 @@ export const auth = betterAuth({
       createdAt: 'created_at',
       updatedAt: 'updated_at',
     },
+    // Required for App Store review (self-service account deletion). No
+    // email sending is configured in this app yet, so there's no
+    // verification-link callback step — /delete-user requires the
+    // account's password directly instead.
+    deleteUser: {
+      enabled: true,
+    },
   },
   session: {
     modelName: 'sessions',

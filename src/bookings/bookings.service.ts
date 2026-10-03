@@ -108,9 +108,11 @@ export class BookingsService {
     }
   }
 
-  async create(createBookingDto: CreateBookingDto, isSynthetic = false) {
-    // TODO(auth): replace with the authenticated user's id once BetterAuth is wired in — see guard/@CurrentUser() plan
-    const userId = 'bf721a73-1a8b-4de2-b74b-a747e1197d3f';
+  async create(
+    createBookingDto: CreateBookingDto,
+    userId: string,
+    isSynthetic = false,
+  ) {
     const { hotelId, checkIn, checkOut } = createBookingDto;
 
     // additional validation beyond dto
