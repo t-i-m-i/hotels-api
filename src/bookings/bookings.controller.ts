@@ -9,7 +9,7 @@ import {
   Headers,
   HttpCode,
   ParseUUIDPipe,
-  UseInterceptors,
+  // UseInterceptors,
   ForbiddenException,
 } from '@nestjs/common';
 import { AllowAnonymous, Session } from '@thallesp/nestjs-better-auth';
@@ -30,7 +30,7 @@ import {
 import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
 import { DeleteSyntheticBookingsDto } from './dto/delete-synthetic-bookings.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
-import { LoggingInterceptor } from 'src/logging.interceptor';
+// import { LoggingInterceptor } from 'src/logging.interceptor';
 
 @ApiTags('bookings')
 @Controller('bookings')
@@ -77,7 +77,7 @@ export class BookingsController {
 
   @Get('user/:userId')
   @ApiOkResponse({ type: BookingDetailsDto, isArray: true })
-  @UseInterceptors(LoggingInterceptor)
+  // @UseInterceptors(LoggingInterceptor)
   getBookingsByUser(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Session() session: UserSession,
