@@ -642,6 +642,11 @@
             "items": {
               "$ref": "#/components/schemas/HotelImageDto"
             }
+          },
+          "distanceMeters": {
+            "type": "number",
+            "example": 1250,
+            "description": "Distance in meters from the requested point. Only present on GET /hotels/nearest."
           }
         },
         "required": [

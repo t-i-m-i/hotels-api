@@ -12,6 +12,8 @@ type HotelRow = {
   location: string;
   latitude: number;
   longitude: number;
+  // Only selected by findNearest.
+  distance_m?: number;
 };
 
 function toHotelDto(row: HotelRow): HotelDto {
@@ -22,6 +24,9 @@ function toHotelDto(row: HotelRow): HotelDto {
     location: row.location,
     geo: { latitude: row.latitude, longitude: row.longitude },
     images: hotelImages(row.id, row.name),
+    ...(row.distance_m != null && {
+      distanceMeters: Math.round(row.distance_m),
+    }),
   };
 }
 
@@ -142,7 +147,8 @@ export class HotelsService {
     const offset = (page - 1) * pageSize;
 
     const pageSql = /*sql*/ `
-    SELECT id, name, description, location, latitude, longitude
+    SELECT id, name, description, location, latitude, longitude,
+           ST_Distance(coordinates, ST_Point($1, $2)::geography) AS distance_m
     FROM hotels
     WHERE ST_DWITHIN(coordinates, ST_Point($1, $2)::geography, 300000)
     -- order by distance AND id in case of ties (more hotels with the same distance), so results are stable across pages

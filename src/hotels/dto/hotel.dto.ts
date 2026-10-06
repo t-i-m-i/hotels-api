@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsLatitude, IsLongitude } from 'class-validator';
 
 export class GeoDto {
@@ -54,4 +54,10 @@ export class HotelDto {
       'Gallery images for the hotel, in display order. First entry is the cover.',
   })
   images!: HotelImageDto[];
+  @ApiPropertyOptional({
+    example: 1250,
+    description:
+      'Distance in meters from the requested point. Only present on GET /hotels/nearest.',
+  })
+  distanceMeters?: number;
 }

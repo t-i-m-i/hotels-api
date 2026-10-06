@@ -100,6 +100,17 @@ describe('HotelsService', () => {
       });
     });
 
+    it('selects the distance and exposes it as rounded distanceMeters', async () => {
+      mockNearestQueries([{ ...row('a'), distance_m: 1234.56 }, row('b')], 2);
+
+      const result = await service.findNearest(2.17, 41.38);
+
+      expect(pageCall()[0]).toMatch(/ST_Distance\(.*\)\s+AS distance_m/is);
+      expect(result.data[0].distanceMeters).toBe(1235);
+      // rows without a distance (e.g. from findAll) don't get the field at all
+      expect(result.data[1]).not.toHaveProperty('distanceMeters');
+    });
+
     it('returns an empty page with pageCount 0 when nothing is in range', async () => {
       mockNearestQueries([], 0);
 
