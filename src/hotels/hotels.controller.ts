@@ -1,4 +1,11 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Query,
+  // UseInterceptors
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
@@ -13,6 +20,7 @@ import { PaginatedHotelsDto } from './dto/paginated-hotels.dto';
 import { HotelsService } from './hotels.service';
 import { HotelsWithinBoundsQueryDto } from './dto/hotels-within-bounds-query.dto';
 import { NearestHotelsQueryDto } from './dto/nearest-hotels-query.dto';
+// import { LoggingInterceptor } from "src/logging.interceptor";
 
 @ApiTags('hotels')
 @AllowAnonymous()
@@ -35,9 +43,17 @@ export class HotelsController {
   }
 
   @Get('nearest')
-  @ApiOkResponse({ type: HotelDto, isArray: true })
-  findNearest(@Query() query: NearestHotelsQueryDto): Promise<HotelDto[]> {
-    return this.hotelsService.findNearest(query);
+  @ApiOkResponse({ type: PaginatedHotelsDto })
+  // @UseInterceptors(LoggingInterceptor)
+  findNearest(
+    @Query() query: NearestHotelsQueryDto,
+  ): Promise<PaginatedHotelsDto> {
+    return this.hotelsService.findNearest(
+      query.longitude,
+      query.latitude,
+      query.page,
+      query.pageSize,
+    );
   }
 
   @Get(':id')

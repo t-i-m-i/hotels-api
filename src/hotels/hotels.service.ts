@@ -25,6 +25,25 @@ function toHotelDto(row: HotelRow): HotelDto {
   };
 }
 
+function toPaginated(
+  rows: HotelRow[],
+  total: number,
+  page: number,
+  pageSize: number,
+): PaginatedHotelsDto {
+  return {
+    data: rows.map(toHotelDto),
+    meta: {
+      pagination: {
+        page,
+        pageSize,
+        pageCount: Math.ceil(total / pageSize),
+        total,
+      },
+    },
+  };
+}
+
 @Injectable()
 export class HotelsService {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
@@ -51,20 +70,12 @@ export class HotelsService {
       this.pool.query<{ total: number }>(countSql, [search ?? null]),
     ]);
 
-    const total = countResult.rows[0]?.total ?? 0;
-    const pageCount = Math.ceil(total / pageSize);
-
-    const data = result.rows.map(toHotelDto);
-    const meta = {
-      pagination: {
-        page,
-        pageSize,
-        pageCount,
-        total,
-      },
-    };
-
-    return { data, meta };
+    return toPaginated(
+      result.rows,
+      countResult.rows[0]?.total ?? 0,
+      page,
+      pageSize,
+    );
   }
 
   async findOne(id: string): Promise<HotelDto> {
@@ -122,22 +133,42 @@ export class HotelsService {
     return rows.map(toHotelDto);
   }
 
-  async findNearest(coords: {
-    latitude: number;
-    longitude: number;
-  }): Promise<HotelDto[]> {
-    const sql = /*sql*/ `
+  async findNearest(
+    longitude: number,
+    latitude: number,
+    page: number = 1,
+    pageSize: number = 20,
+  ): Promise<PaginatedHotelsDto> {
+    const offset = (page - 1) * pageSize;
+
+    const pageSql = /*sql*/ `
     SELECT id, name, description, location, latitude, longitude
     FROM hotels
     WHERE ST_DWITHIN(coordinates, ST_Point($1, $2)::geography, 300000)
-    ORDER BY coordinates <-> ST_Point($1, $2)::geography
-    LIMIT 5`;
+    -- order by distance AND id in case of ties (more hotels with the same distance), so results are stable across pages
+    ORDER BY coordinates <-> ST_Point($1, $2)::geography, id
+    LIMIT $3 OFFSET $4`;
 
-    const { rows } = await this.pool.query<HotelRow>(sql, [
-      coords.longitude,
-      coords.latitude,
+    const countSql = /*sql*/ `
+    SELECT COUNT(*)::int AS total
+    FROM hotels
+    WHERE ST_DWITHIN(coordinates, ST_Point($1, $2)::geography, 300000)`;
+
+    const [result, countResult] = await Promise.all([
+      this.pool.query<HotelRow>(pageSql, [
+        longitude,
+        latitude,
+        pageSize,
+        offset,
+      ]),
+      this.pool.query<{ total: number }>(countSql, [longitude, latitude]),
     ]);
 
-    return rows.map(toHotelDto);
+    return toPaginated(
+      result.rows,
+      countResult.rows[0]?.total ?? 0,
+      page,
+      pageSize,
+    );
   }
 }
