@@ -375,6 +375,39 @@
         ]
       }
     },
+    "/bookings/host/{hostId}": {
+      "get": {
+        "operationId": "BookingsController_getByHost",
+        "parameters": [
+          {
+            "name": "hostId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HostHotelBookingsDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
     "/bookings/{id}": {
       "get": {
         "operationId": "BookingsController_findOne",
@@ -823,6 +856,17 @@
           },
           "checkOut": {
             "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "completed",
+              "no_show"
+            ],
+            "example": "pending"
           }
         },
         "required": [
@@ -830,7 +874,65 @@
           "hotel",
           "user",
           "checkIn",
-          "checkOut"
+          "checkOut",
+          "status"
+        ]
+      },
+      "HostBookingDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/BookingUserSummaryDto"
+          },
+          "checkIn": {
+            "type": "string"
+          },
+          "checkOut": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "completed",
+              "no_show"
+            ],
+            "example": "pending"
+          }
+        },
+        "required": [
+          "id",
+          "user",
+          "checkIn",
+          "checkOut",
+          "status"
+        ]
+      },
+      "HostHotelBookingsDto": {
+        "type": "object",
+        "properties": {
+          "hotelId": {
+            "type": "string"
+          },
+          "hotelName": {
+            "type": "string"
+          },
+          "bookings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HostBookingDto"
+            }
+          }
+        },
+        "required": [
+          "hotelId",
+          "hotelName",
+          "bookings"
         ]
       },
       "UpdateBookingDto": {

@@ -36,4 +36,22 @@ export class BookingDetailsDto {
   @ApiProperty({ type: BookingUserSummaryDto }) user!: BookingUserSummaryDto;
   @ApiProperty() checkIn!: string;
   @ApiProperty() checkOut!: string;
+  @ApiProperty({ enum: BookingStatus, example: BookingStatus.Pending })
+  status!: BookingStatus;
+}
+
+export class HostBookingDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ type: BookingUserSummaryDto }) user!: BookingUserSummaryDto;
+  @ApiProperty() checkIn!: string;
+  @ApiProperty() checkOut!: string;
+  @ApiProperty({ enum: BookingStatus, example: BookingStatus.Pending })
+  status!: BookingStatus;
+}
+
+export class HostHotelBookingsDto {
+  @ApiProperty() hotelId!: string;
+  @ApiProperty() hotelName!: string;
+  @ApiProperty({ type: HostBookingDto, isArray: true })
+  bookings!: HostBookingDto[];
 }

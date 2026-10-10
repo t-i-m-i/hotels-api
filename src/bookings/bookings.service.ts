@@ -14,7 +14,11 @@ import { EMAIL_QUEUE } from './bookings.constants';
 import { BookingCreatedEvent } from './events/booking-created.event';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
+import {
+  BookingDetailsDto,
+  BookingDto,
+  HostHotelBookingsDto,
+} from './dto/booking.dto';
 import { BookingStatus } from './booking-status.enum';
 import { FirebasePushService } from '../push-notifications/firebase-push.service';
 
@@ -53,6 +57,8 @@ type BookingDetailsRow = {
   id: string;
   check_in: Date;
   check_out: Date;
+  status: BookingStatus;
+  hotel_id: string;
   hotel_name: string;
   first_name: string;
   last_name: string;
@@ -65,6 +71,7 @@ function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
     user: { firstName: row.first_name, lastName: row.last_name },
     checkIn: formatDateOnly(row.check_in),
     checkOut: formatDateOnly(row.check_out),
+    status: row.status,
   };
 }
 
@@ -162,8 +169,15 @@ export class BookingsService {
   }
 
   async findAll(): Promise<BookingDetailsDto[]> {
-    const result = await this.pool
-      .query<BookingDetailsRow>(/*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
+    const result = await this.pool.query<BookingDetailsRow>(/*sql*/ `SELECT
+        b.id,
+        b.check_in,
+        b.check_out,
+        b.status,
+        h.id as hotel_id,
+        h.name as hotel_name,
+        u.first_name,
+        u.last_name
         FROM bookings b
         INNER JOIN hotels h ON h.id = b.hotel_id
         INNER JOIN users u ON u.id = b.user_id
@@ -171,6 +185,7 @@ export class BookingsService {
     return result.rows.map(toBookingDetailsDto);
   }
 
+  // TODO investigate if it is secure to return user_id here or maybe it should be returned user_id only if the booking is from the currently logged in user - but then verify useQuery cache keys on the frontend if it as a user_id string in it.
   async findCurrentByHotel(hotelId: string): Promise<BookingDto[]> {
     const result = await this.pool.query<BookingRow>(
       /*sql*/ `SELECT id, user_id, hotel_id, check_in, check_out FROM bookings
@@ -183,7 +198,7 @@ export class BookingsService {
 
   async getBookingsByUser(userId: string): Promise<BookingDetailsDto[]> {
     const result = await this.pool.query<BookingDetailsRow>(
-      /*sql*/ `SELECT b.id, b.check_in, b.check_out, h.name as hotel_name, u.first_name, u.last_name
+      /*sql*/ `SELECT b.id, b.check_in, b.check_out, b.status, h.id as hotel_id, h.name as hotel_name, u.first_name, u.last_name
       FROM bookings b
        INNER JOIN hotels h on h.id = b.hotel_id
        INNER JOIN users u on u.id = b.user_id
@@ -192,6 +207,48 @@ export class BookingsService {
       [userId],
     );
     return result.rows.map(toBookingDetailsDto);
+  }
+
+  async getByHost(hostId: string): Promise<HostHotelBookingsDto[]> {
+    const result = await this.pool.query<BookingDetailsRow>(
+      /*sql*/ `SELECT
+        b.id,
+        b.check_in,
+        b.check_out,
+        b.status,
+        h.id as hotel_id,
+        h.name as hotel_name,
+        coalesce(u.first_name, 'Unknown') as first_name,
+        coalesce(u.last_name, 'Unknown') as last_name
+      FROM bookings b
+       INNER JOIN hotels h on h.id = b.hotel_id
+       LEFT JOIN users u on u.id = b.user_id
+       WHERE h.owner_id = $1
+       ORDER BY h.name, b.check_in`,
+      [hostId],
+    );
+
+    const responseMap = new Map<string, HostHotelBookingsDto>();
+    for (const row of result.rows) {
+      const hotelId = row.hotel_id;
+      if (!responseMap.has(hotelId)) {
+        responseMap.set(hotelId, {
+          hotelId: row.hotel_id,
+          hotelName: row.hotel_name,
+          bookings: [],
+        });
+      }
+      const hostHotelBookingsDto = responseMap.get(hotelId)!;
+      hostHotelBookingsDto.bookings.push({
+        id: row.id,
+        user: { firstName: row.first_name, lastName: row.last_name },
+        checkIn: formatDateOnly(row.check_in),
+        checkOut: formatDateOnly(row.check_out),
+        status: row.status,
+      });
+    }
+
+    return Array.from(responseMap.values());
   }
 
   async findOne(id: string): Promise<BookingDto> {

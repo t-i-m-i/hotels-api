@@ -27,7 +27,11 @@ import {
   ApiParam,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
-import { BookingDetailsDto, BookingDto } from './dto/booking.dto';
+import {
+  BookingDetailsDto,
+  BookingDto,
+  HostHotelBookingsDto,
+} from './dto/booking.dto';
 import { DeleteSyntheticBookingsDto } from './dto/delete-synthetic-bookings.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 // import { LoggingInterceptor } from 'src/logging.interceptor';
@@ -86,6 +90,18 @@ export class BookingsController {
       throw new ForbiddenException();
     }
     return this.bookingsService.getBookingsByUser(userId);
+  }
+
+  @Get('host/:hostId')
+  @ApiOkResponse({ type: HostHotelBookingsDto, isArray: true })
+  getByHost(
+    @Param('hostId', ParseUUIDPipe) hostId: string,
+    @Session() session: UserSession,
+  ): Promise<HostHotelBookingsDto[]> {
+    if (hostId !== session.user.id) {
+      throw new ForbiddenException();
+    }
+    return this.bookingsService.getByHost(hostId);
   }
 
   @Get(':id')
