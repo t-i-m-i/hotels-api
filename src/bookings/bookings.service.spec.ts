@@ -1,7 +1,12 @@
 import { jest } from '@jest/globals';
 import type { Mock } from 'jest-mock';
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bull';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookingsService } from './bookings.service';
@@ -26,7 +31,9 @@ describe('BookingsService', () => {
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         {
           provide: FirebasePushService,
-          useValue: { sendToUser: jest.fn() },
+          useValue: {
+            sendToUser: jest.fn<() => Promise<void>>().mockResolvedValue(),
+          },
         },
       ],
     }).compile();
@@ -203,6 +210,109 @@ describe('BookingsService', () => {
       await expect(
         (service as any).assertNoOverlap('hotel-1', '2026-09-10', '2026-09-15'),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('updateStatus', () => {
+    const past = new Date(2020, 0, 1);
+    const future = new Date(2099, 0, 1);
+    const current = (overrides: Record<string, unknown> = {}) => ({
+      id: 'b1',
+      user_id: 'guest-1',
+      hotel_id: 'h1',
+      owner_id: 'host-1',
+      check_in: future,
+      check_out: future,
+      status: 'pending',
+      ...overrides,
+    });
+    const arrange = (row: Record<string, unknown> | undefined) => {
+      pool.query.mockResolvedValueOnce({ rows: row ? [row] : [] });
+      pool.query.mockResolvedValueOnce({
+        rows: [current({ ...row, status: 'updated' })],
+      });
+    };
+
+    it('throws NotFound for an unknown booking', async () => {
+      arrange(undefined);
+      await expect(
+        service.updateStatus('b1', 'cancelled' as any, 'host-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('forbids a caller who is neither guest nor host', async () => {
+      arrange(current());
+      await expect(
+        service.updateStatus('b1', 'cancelled' as any, 'stranger'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('lets the host confirm a pending booking', async () => {
+      arrange(current());
+      await service.updateStatus('b1', 'confirmed' as any, 'host-1');
+      expect(pool.query.mock.calls[1][1]).toEqual([
+        'confirmed',
+        'b1',
+        'pending',
+      ]);
+    });
+
+    it('forbids the guest from confirming', async () => {
+      arrange(current());
+      await expect(
+        service.updateStatus('b1', 'confirmed' as any, 'guest-1'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('lets the guest cancel a confirmed booking', async () => {
+      arrange(current({ status: 'confirmed' }));
+      await service.updateStatus('b1', 'cancelled' as any, 'guest-1');
+      expect(pool.query).toHaveBeenCalledTimes(2);
+    });
+
+    it('forbids setting completed, even for the host', async () => {
+      arrange(current({ status: 'confirmed' }));
+      await expect(
+        service.updateStatus('b1', 'completed' as any, 'host-1'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it.each(['cancelled', 'completed', 'no_show'])(
+      'rejects any change from terminal status %s',
+      async (status) => {
+        arrange(current({ status }));
+        await expect(
+          service.updateStatus('b1', 'cancelled' as any, 'host-1'),
+        ).rejects.toBeInstanceOf(ConflictException);
+      },
+    );
+
+    it('rejects no_show on a pending booking', async () => {
+      arrange(current());
+      await expect(
+        service.updateStatus('b1', 'no_show' as any, 'host-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('rejects no_show before the check-in date', async () => {
+      arrange(current({ status: 'confirmed' }));
+      await expect(
+        service.updateStatus('b1', 'no_show' as any, 'host-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('allows no_show once check-in has started', async () => {
+      arrange(current({ status: 'confirmed', check_in: past }));
+      await service.updateStatus('b1', 'no_show' as any, 'host-1');
+      expect(pool.query).toHaveBeenCalledTimes(2);
+    });
+
+    it('conflicts when the status changed between read and write', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [current()] });
+      pool.query.mockResolvedValueOnce({ rows: [] });
+      await expect(
+        service.updateStatus('b1', 'confirmed' as any, 'host-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
   });
 });

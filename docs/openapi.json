@@ -531,8 +531,14 @@
               }
             }
           },
+          "403": {
+            "description": "Caller is neither the guest nor the hotel owner, or may not set this status"
+          },
           "404": {
             "description": "Booking not found"
+          },
+          "409": {
+            "description": "Transition not allowed from the booking’s current state"
           }
         },
         "tags": [

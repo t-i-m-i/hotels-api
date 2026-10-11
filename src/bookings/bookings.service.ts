@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -20,6 +21,11 @@ import {
   HostHotelBookingsDto,
 } from './dto/booking.dto';
 import { BookingStatus } from './booking-status.enum';
+import {
+  ALLOWED_TRANSITIONS,
+  BookingActor,
+  effectiveStatusSql,
+} from './booking-status-transitions';
 import { FirebasePushService } from '../push-notifications/firebase-push.service';
 
 type BookingRow = {
@@ -173,7 +179,7 @@ export class BookingsService {
         b.id,
         b.check_in,
         b.check_out,
-        b.status,
+        ${effectiveStatusSql('b')} as status,
         h.id as hotel_id,
         h.name as hotel_name,
         u.first_name,
@@ -198,7 +204,7 @@ export class BookingsService {
 
   async getBookingsByUser(userId: string): Promise<BookingDetailsDto[]> {
     const result = await this.pool.query<BookingDetailsRow>(
-      /*sql*/ `SELECT b.id, b.check_in, b.check_out, b.status, h.id as hotel_id, h.name as hotel_name, u.first_name, u.last_name
+      /*sql*/ `SELECT b.id, b.check_in, b.check_out, ${effectiveStatusSql('b')} as status, h.id as hotel_id, h.name as hotel_name, u.first_name, u.last_name
       FROM bookings b
        INNER JOIN hotels h on h.id = b.hotel_id
        INNER JOIN users u on u.id = b.user_id
@@ -215,7 +221,7 @@ export class BookingsService {
         b.id,
         b.check_in,
         b.check_out,
-        b.status,
+        ${effectiveStatusSql('b')} as status,
         h.id as hotel_id,
         h.name as hotel_name,
         coalesce(u.first_name, 'Unknown') as first_name,
@@ -253,7 +259,9 @@ export class BookingsService {
 
   async findOne(id: string): Promise<BookingDto> {
     const result = await this.pool.query<BookingRow>(
-      `SELECT * FROM bookings WHERE id = $1`,
+      /*sql*/ `SELECT b.id, b.user_id, b.hotel_id, b.check_in, b.check_out,
+        ${effectiveStatusSql('b')} as status
+        FROM bookings b WHERE b.id = $1`,
       [id],
     );
     const row = result.rows[0];
@@ -268,16 +276,65 @@ export class BookingsService {
     return `This action updates a #${id} booking`;
   }
 
-  async updateStatus(id: string, status: BookingStatus): Promise<BookingDto> {
+  async updateStatus(
+    id: string,
+    status: BookingStatus,
+    callerId: string,
+  ): Promise<BookingDto> {
+    const current = await this.pool.query<BookingRow & { owner_id: string }>(
+      /*sql*/ `SELECT b.id, b.user_id, b.hotel_id, b.check_in, b.check_out,
+        ${effectiveStatusSql('b')} as status, h.owner_id
+        FROM bookings b
+        INNER JOIN hotels h ON h.id = b.hotel_id
+        WHERE b.id = $1`,
+      [id],
+    );
+    const existing = current.rows[0];
+    if (!existing) {
+      throw new NotFoundException(`Booking with id ${id} not found`);
+    }
+
+    const actors: BookingActor[] = [];
+    if (existing.owner_id === callerId) actors.push('host');
+    if (existing.user_id === callerId) actors.push('guest');
+    if (actors.length === 0) {
+      throw new ForbiddenException();
+    }
+
+    const targetsForActor = (actor: BookingActor) =>
+      Object.values(ALLOWED_TRANSITIONS[actor]).flat();
+    if (!actors.some((a) => targetsForActor(a).includes(status))) {
+      throw new ForbiddenException(`You cannot set a booking to '${status}'`);
+    }
+    if (
+      !actors.some((a) =>
+        ALLOWED_TRANSITIONS[a][existing.status]?.includes(status),
+      )
+    ) {
+      throw new ConflictException(
+        `Cannot change a '${existing.status}' booking to '${status}'`,
+      );
+    }
+    if (
+      status === BookingStatus.NoShow &&
+      formatDateOnly(existing.check_in) > formatDateOnly(new Date())
+    ) {
+      throw new ConflictException(
+        'A booking can only be marked no-show on or after its check-in date',
+      );
+    }
+
+    // `AND status = $3` makes the transition atomic: if the status changed
+    // between the read above and this write, nothing is updated.
     const result = await this.pool.query<BookingRow>(
       /*sql*/ `UPDATE bookings SET status = $1, updated_at = now()
-        WHERE id = $2
+        WHERE id = $2 AND status = $3
         RETURNING *`,
-      [status, id],
+      [status, id, existing.status],
     );
     const row = result.rows[0];
     if (!row) {
-      throw new NotFoundException(`Booking with id ${id} not found`);
+      throw new ConflictException('Booking status changed, please retry');
     }
     const booking = toBookingDto(row);
 
