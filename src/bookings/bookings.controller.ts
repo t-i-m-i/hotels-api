@@ -114,6 +114,7 @@ export class BookingsController {
     return this.bookingsService.findOne(id);
   }
 
+  // TODO what is this? is this to remove?
   @Patch(':id')
   @AllowAnonymous()
   update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
