@@ -28,4 +28,5 @@ npm-debug.log*
 /coverage
 /.nyc_output
 
-.zed/
+.zed/*
+!.zed/settings.json
