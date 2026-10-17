@@ -7,17 +7,15 @@ serves hotel listing data. It's the server-side half of a demo project
 showing a type-safe API contract shared between a NestJS backend and an
 Expo/React Native client via a generated OpenAPI spec.
 
-This is a demo, not production infrastructure:
+What it provides, deliberately:
 
-- **No authentication.** There's currently no login/session/token system.
-  Nothing in the API is gated.
-
-What it does provide, deliberately:
-
+- **Authentication powered by [Better Auth](https://www.better-auth.com).**
+  Login and session handling are provided by the Better Auth library.
 - **A public API contract.** All routes are backed by explicit DTOs
   (`HotelDto`, `GeoDto`, `ListHotelsQueryDto`, `BookingDto`, and friends)
   with `@nestjs/swagger` decorators — no internal data shape ever leaks
-  into a response; the DTOs *are* the contract.
+  into a response; the DTOs *are* the contract. The full list of routes
+  lives in the Swagger docs at `http://localhost:3000/api`.
 - **A generated OpenAPI spec** (`docs/openapi.json`, committed) that the
   Expo app's `openapi-typescript` codegen consumes directly, so both sides
   of the API boundary share real, generated TypeScript types instead of
@@ -32,22 +30,7 @@ What it does provide, deliberately:
   request path. Local dev needs Redis (`REDIS_URL`); a queue dashboard is
   served at `http://localhost:3000/queues`.
 
-## 2. Routes
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/hotels` | List hotels. Optional `?search=` filters by name/location. |
-| `GET` | `/hotels/:id` | Fetch a single hotel, `404` if the id doesn't exist. |
-| `POST` | `/bookings` | Create a booking. |
-| `GET` | `/bookings` | List all bookings, with hotel and user details. |
-| `GET` | `/bookings/hotel/:hotelId` | Current bookings for a hotel. |
-| `GET` | `/bookings/user/:userId` | Bookings for a user, with details. |
-| `GET` | `/bookings/:id` | Fetch a single booking, `404` if the id doesn't exist. |
-| `PATCH` | `/bookings/:id` | Update a booking. |
-| `DELETE` | `/bookings/:id` | Delete a booking. |
-| `DELETE` | `/bookings/synthetic` | Bulk-delete bookings created with `X-Synthetic-Booking: true` — see [Testing](#5-testing). |
-
-## 3. Running it locally
+## 2. Running it locally
 
 Requires [bun](https://bun.sh) and a local Redis (`docker compose up -d redis`) for the job queues.
 
@@ -72,7 +55,7 @@ dashboard at `http://localhost:3000/queues`.
 | `bun run lint` | ESLint. |
 | `bun run test` | Unit tests (Jest). |
 
-## 4. Working alongside the Expo app
+## 3. Working alongside the Expo app
 
 The two repos are meant to be checked out as siblings
 (`hotels/` and `hotels-api/` next to each other) — the Expo app's
@@ -85,7 +68,7 @@ leave it running while you work on the Expo side.
 See `docs/logs/` for the running history of how this was built and why,
 and `docs/README.md` for the log convention.
 
-## 5. Testing
+## 4. Testing
 
 | Command | What it does |
 |---|---|
