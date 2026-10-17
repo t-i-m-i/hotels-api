@@ -1,7 +1,7 @@
-import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import type { NextFunction, Request, Response } from 'express';
+import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
+import type { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
 import { buildOpenApiDocument } from './openapi-document';
 
@@ -27,7 +27,10 @@ async function bootstrap() {
     });
   }
 
-  app.enableCors();
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS?.split(',') ?? [],
+    credentials: true,
+  });
   app.enableShutdownHooks();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 

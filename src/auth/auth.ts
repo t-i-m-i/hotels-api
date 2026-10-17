@@ -1,7 +1,7 @@
-import 'dotenv/config';
+import { expo } from '@better-auth/expo';
 import { betterAuth } from 'better-auth';
 import { customSession, openAPI } from 'better-auth/plugins';
-import { expo } from '@better-auth/expo';
+import 'dotenv/config';
 import { Pool } from 'pg';
 
 // Standalone Pool (not the app's PG_POOL DI token) so this file stays importable
@@ -21,7 +21,7 @@ export const auth = betterAuth({
   // every request that carries a cookie (including plain email sign-in,
   // once any cookie - even a stray OAuth-state one - has been stored) fails
   // origin validation with MISSING_OR_NULL_ORIGIN/INVALID_ORIGIN.
-  trustedOrigins: ['hotels://'],
+  trustedOrigins: ['hotels://', 'http://localhost:3001'],
   emailAndPassword: {
     enabled: true,
   },
