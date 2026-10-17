@@ -1,20 +1,22 @@
-# Hotels API
+# Hotels API - NestJS
 
-## 1. What this is
+## What this is
 
-The backend for the [Hotels app](https://github.com/t-i-m-i/hotels) — a small NestJS REST API that
+The backend for the [Hotels app](https://github.com/t-i-m-i/hotels) — a small **NestJS** REST API that
 serves hotel listing data. It's the server-side half of a demo project
 showing a type-safe API contract shared between a NestJS backend and an
 Expo/React Native client via a generated OpenAPI spec.
 
-What it provides, deliberately:
+<img width="1200" height="667" alt="Image" src="https://github.com/user-attachments/assets/a889b15e-be91-46c2-a60f-47cfc9f902f3" />
+
+## What it provides
 
 - **Authentication powered by [Better Auth](https://www.better-auth.com).**
   Login and session handling are provided by the Better Auth library.
 - **A public API contract.** All routes are backed by explicit DTOs
   (`HotelDto`, `GeoDto`, `ListHotelsQueryDto`, `BookingDto`, and friends)
   with `@nestjs/swagger` decorators — no internal data shape ever leaks
-  into a response; the DTOs *are* the contract. The full list of routes
+  into a response; the DTOs _are_ the contract. The full list of routes
   lives in the Swagger docs at `http://localhost:3000/api`.
 - **A generated OpenAPI spec** (`docs/openapi.json`, committed) that the
   Expo app's `openapi-typescript` codegen consumes directly, so both sides
@@ -30,7 +32,7 @@ What it provides, deliberately:
   request path. Local dev needs Redis (`REDIS_URL`); a queue dashboard is
   served at `http://localhost:3000/queues`.
 
-## 2. Running it locally
+## Running it locally
 
 Requires [bun](https://bun.sh) and a local Redis (`docker compose up -d redis`) for the job queues.
 
@@ -46,36 +48,36 @@ dashboard at `http://localhost:3000/queues`.
 
 ### Scripts
 
-| Command | What it does |
-|---|---|
-| `bun run start:dev` | Start the dev server with watch mode. |
-| `bun run build` | Compile to `dist/`. |
-| `bun run start:prod` | Run the compiled build (`node dist/main`). |
+| Command                    | What it does                                                                                                                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run start:dev`        | Start the dev server with watch mode.                                                                                                                                                                 |
+| `bun run build`            | Compile to `dist/`.                                                                                                                                                                                   |
+| `bun run start:prod`       | Run the compiled build (`node dist/main`).                                                                                                                                                            |
 | `bun run generate:openapi` | Regenerate `docs/openapi.json` from the current controllers/DTOs — run this after changing any route or DTO shape, then re-run `bun run generate:api-types` in the Expo app to pick up the new types. |
-| `bun run lint` | ESLint. |
-| `bun run test` | Unit tests (Jest). |
+| `bun run lint`             | ESLint.                                                                                                                                                                                               |
+| `bun run test`             | Unit tests (Jest).                                                                                                                                                                                    |
 
-## 3. Working alongside the Expo app
+## Working alongside the Expo app
 
 The two repos are meant to be checked out as siblings
 (`hotels/` and `hotels-api/` next to each other) — the Expo app's
 type-generation script reads this repo's `docs/openapi.json` via a
 relative path, no running server required for that step. For actually
-*using* the API from the app, though, this server does need to be running
+_using_ the API from the app, though, this server does need to be running
 locally (`bun run start:dev`) — start it in its own terminal tab/pane and
 leave it running while you work on the Expo side.
 
 See `docs/logs/` for the running history of how this was built and why,
 and `docs/README.md` for the log convention.
 
-## 4. Testing
+## Testing
 
-| Command | What it does |
-|---|---|
-| `bun run test` | Unit tests (Jest, `rootDir: src`). |
-| `bun run test:watch` | Unit tests in watch mode. |
-| `bun run test:cov` | Unit tests with coverage. |
-| `bun run test:e2e` | E2E tests (`test/*.e2e-spec.ts`) — boots the real `AppModule` against whatever `DATABASE_URL` points to. No mocks. |
+| Command              | What it does                                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `bun run test`       | Unit tests (Jest, `rootDir: src`).                                                                                 |
+| `bun run test:watch` | Unit tests in watch mode.                                                                                          |
+| `bun run test:cov`   | Unit tests with coverage.                                                                                          |
+| `bun run test:e2e`   | E2E tests (`test/*.e2e-spec.ts`) — boots the real `AppModule` against whatever `DATABASE_URL` points to. No mocks. |
 
 `bun run test:e2e` needs a reachable database with the demo seed data
 (same `DATABASE_URL` as `bun run start:dev`) and Redis up, since booting
