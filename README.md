@@ -30,7 +30,10 @@ Requires [bun](https://bun.sh) and a local Redis (`docker compose up -d redis`) 
 bun install
 # set DATABASE_URL; REDIS_URL points at localhost by default
 cp .env.example .env
-# Regenerate `docs/openapi.json` from the current controllers/DTOs. Run this after changing any route or DTO shape, then re-run `bun run generate:api-types` in the Expo and Next.js app to pick up the new types.
+# Regenerate `docs/openapi.json` from the current controllers/DTOs.
+# Run this after changing any route or DTO shape,
+# then re-run `bun run generate:api-types` in the Expo and Next.js app
+# to pick up the new types.
 bun run generate:openapi
 bun run start:dev
 ```
