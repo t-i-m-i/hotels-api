@@ -24,7 +24,7 @@
 
 ## Running it locally
 
-Requires [bun](https://bun.sh) and a local Redis (`docker compose up -d redis`) for the job queues.
+Requires [bun](https://bun.sh) and a local Redis (`docker compose up -d redis`) for the job queues, and a PostgreSQL database with the PostGIS extension.
 
 ```bash
 bun install
@@ -35,6 +35,9 @@ cp .env.example .env
 # then re-run `bun run generate:api-types` in the Expo and Next.js app
 # to pick up the new types.
 bun run generate:openapi
+# Apply all SQL migrations in `migrations/` to the database in DATABASE_URL
+# (also enables PostGIS, so the database user needs permission to create extensions)
+bun run migrate:up
 bun run start:dev
 ```
 
