@@ -63,13 +63,6 @@ export class BookingsController {
     );
   }
 
-  // INFO temp commented out - disabled getting all bookings for now
-  // @Get()
-  // @ApiOkResponse({ type: BookingDetailsDto, isArray: true })
-  // findAll(): Promise<BookingDetailsDto[]> {
-  //   return this.bookingsService.findAll();
-  // }
-
   @Get('hotel/:hotelId')
   @ApiParam({ name: 'hotelId', format: 'uuid' })
   @ApiOkResponse({ type: BookingDto, isArray: true })

@@ -41,6 +41,10 @@ describe('BookingsService', () => {
     service = module.get<BookingsService>(BookingsService);
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -152,6 +156,8 @@ describe('BookingsService', () => {
     });
 
     it('uses the hotel id (not the booking id) and maps booking fields to the DTO shape', async () => {
+      // allowedStatusChanges depends on "today", so pin it to before check-in
+      jest.useFakeTimers({ now: new Date(2026, 8, 10) });
       pool.query.mockResolvedValueOnce({
         rows: [
           bookingRow(
@@ -178,6 +184,7 @@ describe('BookingsService', () => {
               checkIn: '2026-09-13',
               checkOut: '2026-09-15',
               status: 'confirmed',
+              allowedStatusChanges: ['cancelled'],
             },
           ],
         },

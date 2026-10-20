@@ -25,6 +25,7 @@ import {
   ALLOWED_TRANSITIONS,
   BookingActor,
   effectiveStatusSql,
+  getAllowedStatusChanges,
 } from './booking-status-transitions';
 import { FirebasePushService } from '../push-notifications/firebase-push.service';
 
@@ -70,7 +71,10 @@ type BookingDetailsRow = {
   last_name: string;
 };
 
-function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
+function toBookingDetailsDto(
+  row: BookingDetailsRow,
+  actor: BookingActor,
+): BookingDetailsDto {
   return {
     id: row.id,
     hotel: { name: row.hotel_name },
@@ -78,6 +82,13 @@ function toBookingDetailsDto(row: BookingDetailsRow): BookingDetailsDto {
     checkIn: formatDateOnly(row.check_in),
     checkOut: formatDateOnly(row.check_out),
     status: row.status,
+    allowedStatusChanges: getAllowedStatusChanges(
+      actor,
+      row.status,
+      formatDateOnly(row.check_in),
+      formatDateOnly(row.check_out),
+      formatDateOnly(new Date()),
+    ),
   };
 }
 
@@ -174,23 +185,6 @@ export class BookingsService {
     return booking;
   }
 
-  async findAll(): Promise<BookingDetailsDto[]> {
-    const result = await this.pool.query<BookingDetailsRow>(/*sql*/ `SELECT
-        b.id,
-        b.check_in,
-        b.check_out,
-        ${effectiveStatusSql('b')} as status,
-        h.id as hotel_id,
-        h.name as hotel_name,
-        u.first_name,
-        u.last_name
-        FROM bookings b
-        INNER JOIN hotels h ON h.id = b.hotel_id
-        INNER JOIN users u ON u.id = b.user_id
-      `);
-    return result.rows.map(toBookingDetailsDto);
-  }
-
   // TODO investigate if it is secure to return user_id here or maybe it should be returned user_id only if the booking is from the currently logged in user - but then verify useQuery cache keys on the frontend if it as a user_id string in it.
   async findCurrentByHotel(hotelId: string): Promise<BookingDto[]> {
     const result = await this.pool.query<BookingRow>(
@@ -203,8 +197,10 @@ export class BookingsService {
   }
 
   async getBookingsByUser(userId: string): Promise<BookingDetailsDto[]> {
-    const result = await this.pool.query<BookingDetailsRow>(
-      /*sql*/ `SELECT b.id, b.check_in, b.check_out, ${effectiveStatusSql('b')} as status, h.id as hotel_id, h.name as hotel_name, u.first_name, u.last_name
+    const result = await this.pool.query<
+      BookingDetailsRow & { user_id: string; owner_id: string }
+    >(
+      /*sql*/ `SELECT b.id, b.user_id, b.check_in, b.check_out, ${effectiveStatusSql('b')} as status, h.id as hotel_id, h.name as hotel_name, h.owner_id, u.first_name, u.last_name
       FROM bookings b
        INNER JOIN hotels h on h.id = b.hotel_id
        INNER JOIN users u on u.id = b.user_id
@@ -212,7 +208,9 @@ export class BookingsService {
        ORDER BY b.check_in`,
       [userId],
     );
-    return result.rows.map(toBookingDetailsDto);
+    return result.rows.map((row) =>
+      toBookingDetailsDto(row, row.user_id === row.owner_id ? 'host' : 'guest'),
+    );
   }
 
   async getByHost(hostId: string): Promise<HostHotelBookingsDto[]> {
@@ -251,6 +249,13 @@ export class BookingsService {
         checkIn: formatDateOnly(row.check_in),
         checkOut: formatDateOnly(row.check_out),
         status: row.status,
+        allowedStatusChanges: getAllowedStatusChanges(
+          'host',
+          row.status,
+          formatDateOnly(row.check_in),
+          formatDateOnly(row.check_out),
+          formatDateOnly(new Date()),
+        ),
       });
     }
 
@@ -301,26 +306,24 @@ export class BookingsService {
       throw new ForbiddenException();
     }
 
+    // first check: can this actor ever set this status?
     const targetsForActor = (actor: BookingActor) =>
       Object.values(ALLOWED_TRANSITIONS[actor]).flat();
     if (!actors.some((a) => targetsForActor(a).includes(status))) {
       throw new ForbiddenException(`You cannot set a booking to '${status}'`);
     }
-    if (
-      !actors.some((a) =>
-        ALLOWED_TRANSITIONS[a][existing.status]?.includes(status),
-      )
-    ) {
+    // second check: allowed transition for the current status
+    const allowedStatusChanges = (actor: BookingActor) =>
+      getAllowedStatusChanges(
+        actor,
+        existing.status,
+        formatDateOnly(existing.check_in),
+        formatDateOnly(existing.check_out),
+        formatDateOnly(new Date()),
+      );
+    if (!actors.some((a) => allowedStatusChanges(a).includes(status))) {
       throw new ConflictException(
         `Cannot change a '${existing.status}' booking to '${status}'`,
-      );
-    }
-    if (
-      status === BookingStatus.NoShow &&
-      formatDateOnly(existing.check_in) > formatDateOnly(new Date())
-    ) {
-      throw new ConflictException(
-        'A booking can only be marked no-show on or after its check-in date',
       );
     }
 

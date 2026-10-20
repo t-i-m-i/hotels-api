@@ -26,3 +26,25 @@ export const effectiveStatusSql = (
   alias: string,
 ) => /*sql*/ `CASE WHEN ${alias}.status = 'confirmed' AND ${alias}.check_out < CURRENT_DATE
     THEN 'completed' ELSE ${alias}.status END`;
+
+export function getAllowedStatusChanges(
+  actor: BookingActor,
+  currentStatus: BookingStatus,
+  checkIn: string,
+  checkOut: string,
+  today: string,
+): BookingStatus[] {
+  // no changes allowed for past bookings
+  if (checkOut < today) {
+    return [];
+  }
+  // drop NoShow if checkIn > today
+  if (
+    currentStatus === BookingStatus.Confirmed &&
+    actor === 'host' &&
+    checkIn > today
+  ) {
+    return [BookingStatus.Cancelled];
+  }
+  return ALLOWED_TRANSITIONS[actor][currentStatus] ?? [];
+}

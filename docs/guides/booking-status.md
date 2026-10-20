@@ -20,12 +20,27 @@ The caller is the **host** if they own the booking's hotel (`hotels.owner_id`) a
 
 Extra rule: `no_show` is only accepted on or after the booking's `check_in` date.
 
+## `allowedStatusChanges`
+
+Booking list responses tell the client what it may do, so the app needs no date or
+role logic. `HostBookingDto` (`GET /bookings/host/:hostId`, always the `host` row)
+and `BookingDetailsDto` (`GET /bookings/user/:userId`, the `guest` row, or `host` if
+the user owns the hotel) carry `allowedStatusChanges: BookingStatus[]`.
+
+It comes from `getAllowedStatusChanges` in `booking-status-transitions.ts`, the same
+function `updateStatus` uses for its 409 check: the table above, minus `no_show`
+before check-in, and empty once `check_out` has passed (so a `pending` booking left
+past its dates can no longer be confirmed or cancelled). The 403 check still uses
+the full table. The list is a UI hint only; `PATCH /bookings/:id/status` stays the
+authority, and a list that went stale (e.g. across midnight) just yields a 409.
+
 Errors:
 
 - **403** — the caller can never set that status (e.g. a guest confirming, anyone
   setting `completed`), or isn't part of the booking.
 - **409** — the status is fine for that role but not from the booking's current state
-  (e.g. cancelling a `no_show`, `no_show` before check-in, or the status changed
+  (e.g. cancelling a `no_show`, `no_show` before check-in, any change to a `pending`
+  booking past its `check_out`, or the status changed
   concurrently — the `UPDATE` is guarded with `AND status = <expected>`).
 
 ## `completed` is derived, not stored

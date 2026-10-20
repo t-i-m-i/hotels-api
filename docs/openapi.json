@@ -281,28 +281,6 @@
         "tags": [
           "bookings"
         ]
-      },
-      "get": {
-        "operationId": "BookingsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BookingDetailsDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "bookings"
-        ]
       }
     },
     "/bookings/hotel/{hotelId}": {
@@ -767,12 +745,27 @@
           "checkOut": {
             "type": "string",
             "example": "2026-09-10"
+          },
+          "guestFirstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "guestLastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "guestEmail": {
+            "type": "string",
+            "example": "john.doe@example.com"
           }
         },
         "required": [
           "hotelId",
           "checkIn",
-          "checkOut"
+          "checkOut",
+          "guestFirstName",
+          "guestLastName",
+          "guestEmail"
         ]
       },
       "BookingDto": {
@@ -873,6 +866,19 @@
               "no_show"
             ],
             "example": "pending"
+          },
+          "allowedStatusChanges": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "cancelled",
+                "completed",
+                "no_show"
+              ]
+            }
           }
         },
         "required": [
@@ -881,7 +887,8 @@
           "user",
           "checkIn",
           "checkOut",
-          "status"
+          "status",
+          "allowedStatusChanges"
         ]
       },
       "HostBookingDto": {
@@ -909,6 +916,19 @@
               "no_show"
             ],
             "example": "pending"
+          },
+          "allowedStatusChanges": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "cancelled",
+                "completed",
+                "no_show"
+              ]
+            }
           }
         },
         "required": [
@@ -916,7 +936,8 @@
           "user",
           "checkIn",
           "checkOut",
-          "status"
+          "status",
+          "allowedStatusChanges"
         ]
       },
       "HostHotelBookingsDto": {
@@ -955,6 +976,18 @@
           "checkOut": {
             "type": "string",
             "example": "2026-09-10"
+          },
+          "guestFirstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "guestLastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "guestEmail": {
+            "type": "string",
+            "example": "john.doe@example.com"
           }
         }
       },

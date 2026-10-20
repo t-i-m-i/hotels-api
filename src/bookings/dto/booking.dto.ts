@@ -38,6 +38,8 @@ export class BookingDetailsDto {
   @ApiProperty() checkOut!: string;
   @ApiProperty({ enum: BookingStatus, example: BookingStatus.Pending })
   status!: BookingStatus;
+  @ApiProperty({ enum: BookingStatus, isArray: true })
+  allowedStatusChanges!: BookingStatus[];
 }
 
 export class HostBookingDto {
@@ -47,6 +49,8 @@ export class HostBookingDto {
   @ApiProperty() checkOut!: string;
   @ApiProperty({ enum: BookingStatus, example: BookingStatus.Pending })
   status!: BookingStatus;
+  @ApiProperty({ enum: BookingStatus, isArray: true })
+  allowedStatusChanges!: BookingStatus[];
 }
 
 export class HostHotelBookingsDto {
