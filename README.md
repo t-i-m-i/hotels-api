@@ -16,10 +16,15 @@
   Expo and Next.js app's `openapi-typescript` codegen consumes directly, so both sides of the API boundary share real, generated TypeScript types instead of hand-kept-in-sync interfaces.
 - **Request validation** via `class-validator` + a global `ValidationPipe`.
 - **PostgreSQL database.**
-- **Events and background jobs.** Creating a booking emits an internal
-  event and enqueues Redis-backed jobs, so slower work happens off the
-  request path. Local dev needs Redis (`REDIS_URL`); a queue dashboard is
-  served at `http://localhost:3000/queues`.
+- **Events** via NestJS EventEmitter for in-process side effects. Creating a
+  booking emits a `booking.created` event that listeners (e.g. booking
+  analytics) react to without coupling to the booking service.
+  [[src/bookings/listeners/booking-analytics.listener.ts](src/bookings/listeners/booking-analytics.listener.ts)]
+- **Queues** via Redis + Bull for slower background work, so it happens off
+  the request path. Creating a booking enqueues jobs such as the confirmation
+  email and invoice generation. Local dev needs Redis (`REDIS_URL`); a queue
+  dashboard is served at `http://localhost:3000/queues`.
+  [[src/queue/queue.module.ts](src/queue/queue.module.ts)]
 - **Authentication** powered by [Better Auth](https://www.better-auth.com)
 
 ## Running it locally
