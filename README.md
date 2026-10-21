@@ -5,7 +5,7 @@
 - [Hotels mobile - React Native with Expo](https://github.com/t-i-m-i/hotels)
 - [Hotels web - Next.js](https://github.com/t-i-m-i/hotels-web-next)
 
-<img width="1200" height="667" alt="Image" src="https://github.com/user-attachments/assets/a889b15e-be91-46c2-a60f-47cfc9f902f3" />
+<img width="1200" alt="Image" src="https://github.com/user-attachments/assets/4fdca04d-a4c3-4db3-ab48-5f5fd58bd5d0" />
 
 ## What it provides
 
@@ -26,6 +26,8 @@
   dashboard is served at `http://localhost:3000/queues`.
   [[src/queue/queue.module.ts](src/queue/queue.module.ts)]
 - **Authentication** powered by [Better Auth](https://www.better-auth.com)
+
+<img width="1200" height="667" alt="Image" src="https://github.com/user-attachments/assets/a889b15e-be91-46c2-a60f-47cfc9f902f3" />
 
 ## Running it locally
 
