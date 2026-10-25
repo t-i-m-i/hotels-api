@@ -38,6 +38,15 @@ export function getAllowedStatusChanges(
   if (checkOut < today) {
     return [];
   }
+  // drop Cancelled for stayingNow
+  if (
+    currentStatus === BookingStatus.Confirmed &&
+    actor === 'host' &&
+    today >= checkIn &&
+    today <= checkOut
+  ) {
+    return [BookingStatus.NoShow];
+  }
   // drop NoShow if checkIn > today
   if (
     currentStatus === BookingStatus.Confirmed &&

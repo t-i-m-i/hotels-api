@@ -16,7 +16,7 @@ What it does provide deliberately:
 
 - **A public API contract**: every route is backed by explicit DTOs (`HotelDto`, `GeoDto`,
   `ListHotelsQueryDto`) with `@nestjs/swagger` decorators — no internal data shape ever leaks into a
-  response; the DTOs *are* the contract.
+  response; the DTOs _are_ the contract.
 - **A generated OpenAPI spec** (`docs/openapi.json`, committed) that the Expo app's `openapi-typescript`
   codegen consumes directly, so both sides of the API boundary share generated TypeScript types instead
   of hand-kept-in-sync interfaces.
@@ -35,18 +35,18 @@ cp .env.example .env        # set DATABASE_URL to the shared Neon Postgres insta
 bun run start:dev           # dev server with watch mode, http://localhost:3000
 ```
 
-| Command | What it does |
-|---|---|
-| `bun run start:dev` | Start the dev server with watch mode. |
-| `bun run build` | Compile to `dist/`. |
-| `bun run start:prod` | Run the compiled build (`node dist/main`). |
+| Command                    | What it does                                                                                                                                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run start:dev`        | Start the dev server with watch mode.                                                                                                                                                                            |
+| `bun run build`            | Compile to `dist/`.                                                                                                                                                                                              |
+| `bun run start:prod`       | Run the compiled build (`node dist/main`).                                                                                                                                                                       |
 | `bun run generate:openapi` | Regenerate `docs/openapi.json` from the current controllers/DTOs. **Run this after changing any route or DTO shape**, then re-run `bun run generate:api-types` in the sibling Expo app to pick up the new types. |
-| `bun run lint` | ESLint (`--fix`). |
-| `bun run format` | Prettier over `src/**/*.ts` and `test/**/*.ts`. |
-| `bun run test` | Unit tests (Jest, config lives in `package.json`'s `jest` key, rootDir `src`). |
-| `bun run test:watch` | Jest watch mode. |
-| `bun run test:cov` | Jest with coverage. |
-| `bun run test:e2e` | E2E tests (`test/jest-e2e.json`). |
+| `bun run lint`             | ESLint (`--fix`).                                                                                                                                                                                                |
+| `bun run format`           | Prettier over `src/**/*.ts` and `test/**/*.ts`.                                                                                                                                                                  |
+| `bun run test`             | Unit tests (Jest, config lives in `package.json`'s `jest` key, rootDir `src`).                                                                                                                                   |
+| `bun run test:watch`       | Jest watch mode.                                                                                                                                                                                                 |
+| `bun run test:cov`         | Jest with coverage.                                                                                                                                                                                              |
+| `bun run test:e2e`         | E2E tests (`test/jest-e2e.json`).                                                                                                                                                                                |
 
 To run a single unit test: `bun run test <path-or-name-fragment>` (Jest's normal filtering) or
 `bun run test -- -t '<test name>'`.
@@ -79,18 +79,20 @@ controller.
 
 The two repos are meant to be checked out as siblings (`hotels/` and `hotels-api/` next to each other) —
 the Expo app's type-generation script reads this repo's `docs/openapi.json` via a relative path, no
-running server required for that step. For actually *using* the API from the app, this server needs to
+running server required for that step. For actually _using_ the API from the app, this server needs to
 be running locally (`bun run start:dev`) in its own terminal while working on the Expo side.
 
 ## Docs conventions (`docs/`)
 
-- Top-level `.md` files in `docs/` are reference docs describing the *current* state of the project
+- Top-level `.md` files in `docs/` are reference docs describing the _current_ state of the project
   (architecture, decisions, how-tos) — edited in place as things change.
 - `docs/logs/` is a dated, append-only log of work sessions (`logs/NNN-short-topic.md`, zero-padded,
   incrementing). Logs are never edited after the fact — corrections go in a newer log entry or a
   top-level reference doc instead.
 - `docs/openapi.json` is generated output, not a reference doc.
 
-## Commit messages
+## Git Conventions
 
-One-line commit messages — no multi-paragraph bodies.
+- Write short, concise commit messages (one line, under 50 characters when possible)
+- Example: `"Add dark mode toggle"`, `"Fix user profile validation"`
+- Never include metadata (no Co-Authored-By, issue references, timestamps)
